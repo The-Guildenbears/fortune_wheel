@@ -5,7 +5,7 @@ import { Board } from "./components/board/Board";
 function App() {
   return (
     <>
-      <div>Aidan, Tanna, Emma and Tarik</div>
+      <div>Aidan, Tanna, Emma and Tarik's Wheel of Fortune</div>
       <Board />
       <Wheel />
       <Player />
