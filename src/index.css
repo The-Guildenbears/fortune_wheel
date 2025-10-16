@@ -13,6 +13,8 @@
     border: 1px solid black;
 }
 
+/*-------- Board stuff --------*/
+
 #board_div_category {
     background-color: blue;
     color: white;
@@ -21,7 +23,7 @@
     font-size: 24pt;
 }
 
-#board-grid {
+#board_grid {
   display: flex;
   flex-direction: column;
   align-items: center;

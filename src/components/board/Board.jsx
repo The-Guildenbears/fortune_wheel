@@ -50,7 +50,7 @@ const Board = ({puzzleFragment, category}) => {
     <>
       <div>
         <h1>THE BOARD</h1>
-        <div id="board-grid">
+        <div id="board_grid">
           <BoardFakeRow/>
 
           <div className="board-grid-row">
