@@ -20,14 +20,11 @@ const App = () => {
   const fetching = useRef(true);
 
   // In-game data hooks
-  const [round, setRound] = useState(1);
-  const [turn, setTurn] = useState(1);
   const [puzzlePicked, setPuzzlePicked] = useState(0);
   const [puzzleFragment, setPuzzleFragment] = useState("");
 
   // other game data
   const guessed = new Set();
-  let wedges = [];
 
   //get the puzzles only once
   useEffect(() => {
