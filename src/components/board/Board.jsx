@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import BoardFakeRow from "./BoardFakeRow";
 
-const Board = ({puzzle, category}) => {
+const Board = ({puzzleFragment, category}) => {
+  //parameters:
+  // "puzzleFragment" and "category" are both strings
+
   // width of rows is 12-14-14-12
   // for rows 1 and 4, all squares are blank
   // for rows 2 and 3, the first and last squares are always blank
@@ -31,17 +34,17 @@ const Board = ({puzzle, category}) => {
     }
 
     //flag the squares without spaces
-    for(let i = 0; i < puzzle.length; i++){
-      if(puzzle[i] !== " "){
+    for(let i = 0; i < puzzleFragment.length; i++){
+      if(puzzleFragment[i] !== " "){
         const square = document.getElementById("board_square_"+i);
 
         if(square){
           square.style.backgroundColor = "#FFFFFF";
-          square.innerHTML = (puzzle[i] === "*") ? " " : puzzle[i];
+          square.innerHTML = (puzzleFragment[i] === "*") ? " " : puzzleFragment[i];
         }//if
       }//if
     }//for
-  }, [puzzle]); // Re-run when puzzle changes
+  }, [puzzleFragment]); // Re-run when puzzleFragment changes
   
   return (
     <>

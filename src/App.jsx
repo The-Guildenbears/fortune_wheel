@@ -87,7 +87,7 @@ const App = () => {
       <div>Aidan, Tanna, Emma and Tarik's Wheel of Fortune</div>
       
       <div id="row_board" className="box">
-        <Board puzzle={puzzleFragment} category={puzzles[puzzlePicked].category} />
+        <Board puzzleFragment={puzzleFragment} category={puzzles[puzzlePicked].category} />
       </div>
 
       <div id="row_wheel" className="box">
