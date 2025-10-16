@@ -8,7 +8,7 @@ export function Wheel() {
   const [wheel, setWheel] = useState([]);
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(0);
-  // const [winner, setWinner] = useState(null);
+  const [winner, setWinner] = useState(null);
 
   useEffect(() => {
     setWheel(CreateWheel(round));
@@ -17,7 +17,7 @@ export function Wheel() {
   const handleClick = () => {
     console.log(typeof round);
     setRound((r) => r + 1);
-    // setWinner(null);
+    setWinner(null);
   };
 
   const handleSpinClick = () => {
@@ -30,7 +30,8 @@ export function Wheel() {
 
   const handleStopSpinning = () => {
     setMustSpin(false);
-    // setWinner(wheel[prizeNumber].val);
+    setWinner(wheel[prizeNumber].val);
+    alert(wheel[prizeNumber].val);
   };
 
   const wheelData = wheel.map((segment) => ({
