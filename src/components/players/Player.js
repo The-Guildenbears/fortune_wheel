@@ -1,10 +1,28 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Wheel } from "../wheel/Wheel";
 
-export function Player({ players, setPlayers, currentPlayerIndex, setCurrentPlayerIndex }) {
+export function Player({
+  players,
+  setPlayers,
+  currentPlayerIndex,
+  setCurrentPlayerIndex,
+}) {
   const WHEEL_VALS = [
-    500, 600, 650, 700, 800, 900, 1000, "BANKRUPT", "LOSE A TURN", 500, 600, 700
+    500,
+    600,
+    650,
+    700,
+    800,
+    900,
+    1000,
+    "BANKRUPT",
+    "LOSE A TURN",
+    500,
+    600,
+    700,
   ];
 
+  const [round, setRound] = useState(1);
   const [lastSpinResult, setLastSpinResult] = useState("---");
   const [wheelValues] = useState(WHEEL_VALS);
   const [message, setMessage] = useState("");
@@ -18,21 +36,25 @@ export function Player({ players, setPlayers, currentPlayerIndex, setCurrentPlay
   }
 
   function updatePlayerByIndex(index, updater) {
-    setPlayers((prev) =>
-      prev.map((p, i) => (i === index ? updater(p) : p))
-    );
+    setPlayers((prev) => prev.map((p, i) => (i === index ? updater(p) : p)));
   }
+
+  //every time the wheel picks a result, update player info
+  useEffect(() => {
+    handleSpin();
+  }, [lastSpinResult]);
 
   // Spin the wheel
   function handleSpin() {
-    const pick = wheelValues[Math.floor(Math.random() * wheelValues.length)];
-    setLastSpinResult(String(pick));
+    const pick = lastSpinResult;
 
     const me = currentPlayerIndex;
 
     if (pick === "BANKRUPT") {
       updatePlayerByIndex(me, (p) => ({ ...p, roundBank: 0, bankrupt: true }));
-      setMessage(`${players[me].name} landed on BANKRUPT and loses all round money.`);
+      setMessage(
+        `${players[me].name} landed on BANKRUPT and loses all round money.`
+      );
       nextPlayer();
       return;
     }
@@ -55,6 +77,7 @@ export function Player({ players, setPlayers, currentPlayerIndex, setCurrentPlay
   }
 
   function endRoundBankToTotal() {
+    setRound(round + 1);
     setPlayers((prev) =>
       prev.map((p) => ({
         ...p,
@@ -92,7 +115,6 @@ export function Player({ players, setPlayers, currentPlayerIndex, setCurrentPlay
   return (
     <>
       <h2>PLAYERS</h2>
-
       <div style={{ marginBottom: "0.75rem" }}>
         <div style={{ marginBottom: "0.5rem" }}>
           <strong>Current Player:</strong> {currentPlayer.name}
@@ -108,38 +130,30 @@ export function Player({ players, setPlayers, currentPlayerIndex, setCurrentPlay
           ))}
         </ul>
       </div>
-
-      <button onClick={handleSpin} style={{ marginRight: "0.5rem" }}>
-        Spin
-      </button>
+      <Wheel round={round} setWinner={setLastSpinResult} />
       <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
         Next Player
       </button>
-
       <br /> <br />
-
       <div style={{ marginBottom: "0.5rem" }}>
         <strong>Last Spin Result:</strong> {lastSpinResult}
       </div>
-
-      <br /><br />
-
+      <br />
+      <br />
       <button onClick={endRoundBankToTotal} style={{ marginRight: "0.5rem" }}>
         End Round (Total Bank)
       </button>
-
-      <br /><br />
-
+      <br />
+      <br />
       <button onClick={resetRoundOnly} style={{ marginRight: "0.5rem" }}>
         Reset Round
       </button>
       <button onClick={resetTotals} style={{ marginRight: "0.5rem" }}>
         Reset Totals
       </button>
-
-      <br /><br />
+      <br />
+      <br />
       <button onClick={shuffleTurnOrder}>Randomize Player who starts</button>
-
       <div style={{ marginTop: "0.75rem" }}>{message}</div>
     </>
   );

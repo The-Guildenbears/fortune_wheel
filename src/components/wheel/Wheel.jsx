@@ -3,22 +3,14 @@ import { Wheel as RouletteWheel } from "react-custom-roulette";
 import "./wheel.css";
 import CreateWheel from "./CreateWheel";
 
-export function Wheel() {
-  const [round, setRound] = useState(1);
+export function Wheel({ round, setWinner }) {
   const [wheel, setWheel] = useState([]);
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(0);
-  const [winner, setWinner] = useState(null);
 
   useEffect(() => {
     setWheel(CreateWheel(round));
   }, [round]);
-
-  const handleClick = () => {
-    console.log(typeof round);
-    setRound((r) => r + 1);
-    setWinner(null);
-  };
 
   const handleSpinClick = () => {
     if (!mustSpin && wheel.length > 0) {
@@ -31,7 +23,6 @@ export function Wheel() {
   const handleStopSpinning = () => {
     setMustSpin(false);
     setWinner(wheel[prizeNumber].val);
-    alert(wheel[prizeNumber].val);
   };
 
   const wheelData = wheel.map((segment) => ({
@@ -54,7 +45,6 @@ export function Wheel() {
       <h2>Round {round}</h2>
 
       <div className="controls">
-        <button onClick={handleClick}>Next Round</button>
         <button onClick={handleSpinClick} disabled={mustSpin}>
           {mustSpin ? "Spinning..." : "SPIN"}
         </button>

@@ -1,7 +1,6 @@
 import "./App.css";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Player } from "./components/players/Player";
-import { Wheel } from "./components/wheel/Wheel";
 import { Board } from "./components/board/Board";
 
 function App() {
@@ -20,7 +19,10 @@ function App() {
   const [showVowels, setShowVowels] = useState(false);
 
   const handleBuyClick = () => {
-    if (currentPlayer.roundBank >= 500 && revealedVowels.length < vowels.length) {
+    if (
+      currentPlayer.roundBank >= 500 &&
+      revealedVowels.length < vowels.length
+    ) {
       setShowVowels(true);
     }
   };
@@ -38,9 +40,7 @@ function App() {
 
     // Subtract $500 from the current player's round bank
     const updatedPlayers = players.map((p, i) =>
-      i === currentPlayerIndex
-        ? { ...p, roundBank: p.roundBank - 500 }
-        : p
+      i === currentPlayerIndex ? { ...p, roundBank: p.roundBank - 500 } : p
     );
     setPlayers(updatedPlayers);
 
@@ -53,7 +53,6 @@ function App() {
       <h1>Aidan, Tanna, Emma and Tarik's Wheel of Fortune</h1>
 
       <Board revealedLetters={revealedVowels} />
-      <Wheel />
 
       {/* Player Management */}
       <Player
@@ -85,8 +84,7 @@ function App() {
                 key={v}
                 onClick={() => buyVowel(v)}
                 disabled={
-                  revealedVowels.includes(v) ||
-                  currentPlayer.roundBank < 500
+                  revealedVowels.includes(v) || currentPlayer.roundBank < 500
                 }
                 style={{
                   backgroundColor: "#90ee90",
