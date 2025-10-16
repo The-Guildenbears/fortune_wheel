@@ -11,6 +11,7 @@ import { useEffect, useState, useRef } from "react";
 
 //import functions
 import { getPuzzles } from "./services/getPuzzles";
+import GuessedLetters from "./components/guessedletters/GuessedLetters";
 
 //The component
 const App = () => {
@@ -85,6 +86,10 @@ const App = () => {
       
       <div id="row_board" className="box">
         <Board puzzleFragment={puzzleFragment} category={puzzles[puzzlePicked].category} />
+      </div>
+      
+      <div id="row_guessed" className="box">
+        <GuessedLetters guessedSet={guessed}/>
       </div>
 
       <div id="row_wheel" className="box">
