@@ -9,11 +9,11 @@ export const WHEEL_CONFIG = {
     R: 5000,
   },
   TOP_HEX: "#FFD700",
-  //   Bankrupt
+  // Bankrupt
   BR: 2,
   BR_VAL: "BANKRUPT",
   BR_HEX: "#000000",
-  //   Lose Turn
+  // Lose Turn
   LT: 1,
   LT_VAL: "LOSE TURN",
   LT_HEX: "#FFFFFF",

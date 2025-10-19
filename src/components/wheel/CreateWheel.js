@@ -1,6 +1,6 @@
 import { WHEEL_CONFIG } from "./WheelConfig";
 
-export default function CreateWheel(round) {
+const CreateWheel = (round) => {
   const { SPACES, CASH_VALUES, HEXS } = WHEEL_CONFIG;
 
   const wheelAr = [];
@@ -10,34 +10,38 @@ export default function CreateWheel(round) {
       val: CASH_VALUES[randIdx],
       col: HEXS[i % HEXS.length],
     });
-  }
-  const special = _getSpecFields(round);
-  const taken = _getRandomIndexes(special.length, SPACES);
+  }//for
+
+  const special = getSpecFields(round);
+  const taken = getRandomIndexes(special.length, SPACES);
   for (let i = 0; i < taken.length; i++) {
     let ind = taken[i];
     wheelAr[ind] = special[i];
-  }
-  return wheelAr;
-}
+  }//for
 
-function _getSpecFields(round) {
-  const { BR, BR_HEX, BR_VAL, LT, LT_HEX, LT_VAL, TOP_CASH, TOP_HEX } =
-    WHEEL_CONFIG;
-  let ar = [];
+  return wheelAr;
+}//function
+
+function getSpecFields(round) {
+  const { BR, BR_HEX, BR_VAL, LT, LT_HEX, LT_VAL, TOP_CASH, TOP_HEX } = WHEEL_CONFIG;
+  let arr = [];
+
   // add bankrupt fields
   for (let i = 0; i < BR; i++) {
-    ar.push({
+    arr.push({
       val: BR_VAL,
       col: BR_HEX,
     });
-  }
+  }//for
+
   // add lose turn fields
   for (let i = 0; i < LT; i++) {
-    ar.push({
+    arr.push({
       val: LT_VAL,
       col: LT_HEX,
     });
-  }
+  }//for
+
   let top_cash = 0;
   switch (round) {
     case 1:
@@ -52,16 +56,17 @@ function _getSpecFields(round) {
     default:
       top_cash = TOP_CASH.R;
       break;
-  }
-  ar.push({
+  }//switch
+
+  arr.push({
     val: top_cash,
     col: TOP_HEX,
   });
 
-  return ar;
+  return arr;
 }
 
-function _getRandomIndexes(count, maxIndex) {
+const getRandomIndexes = (count, maxIndex) => {
   const results = [];
 
   while (results.length < count) {
@@ -72,15 +77,17 @@ function _getRandomIndexes(count, maxIndex) {
 
     if (!tooClose) {
       results.push(rand);
-    }
-  }
+    }//if
+  }//while
 
   while (results.length < count) {
     const rand = Math.floor(Math.random() * maxIndex);
     if (!results.includes(rand)) {
       results.push(rand);
-    }
-  }
+    }//if
+  }//while
 
   return results;
-}
+}//func
+
+export default CreateWheel;

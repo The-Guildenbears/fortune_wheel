@@ -1,43 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { Wheel } from "../wheel/Wheel";
+import { useEffect, useState } from "react";
+import Wheel from "../wheel/Wheel";
 
-export default function Player({
+const Player = ({
   players,
   setPlayers,
   currentPlayerIndex,
   setCurrentPlayerIndex,
-}) {
-  const WHEEL_VALS = [
-    500,
-    600,
-    650,
-    700,
-    800,
-    900,
-    1000,
-    "BANKRUPT",
-    "LOSE A TURN",
-    500,
-    600,
-    700,
-  ];
-
+}) => {
+  // Round counters
   const [round, setRound] = useState(1);
-  const [lastSpinResult, setLastSpinResult] = useState("---");
-  const [wheelValues] = useState(WHEEL_VALS);
-  const [message, setMessage] = useState("");
-
   const currentPlayer = players[currentPlayerIndex];
 
-  function nextPlayer() {
+  // Spinner data
+  const [lastSpinResult, setLastSpinResult] = useState("---");
+  const [message, setMessage] = useState("");
+
+  const nextPlayer = () => {
     setCurrentPlayerIndex((idx) => (idx + 1) % players.length);
     setLastSpinResult("---");
     setMessage("");
-  }
+  }//func
 
-  function updatePlayerByIndex(index, updater) {
+  const updatePlayerByIndex = (index, updater) => {
     setPlayers((prev) => prev.map((p, i) => (i === index ? updater(p) : p)));
-  }
+  }//func
 
   //every time the wheel picks a result, update player info
   useEffect(() => {
@@ -45,74 +31,82 @@ export default function Player({
   }, [lastSpinResult]);
 
   // Spin the wheel
-  function handleSpin() {
-    const pick = lastSpinResult;
+  const handleSpin = () => {
+    //keep track of all values for updating a player
+    let message = "Message goes here";
+    let banked = players[currentPlayerIndex].roundBank;
+    let toBankrupt = false;
+    let toSkip = false;
 
-    const me = currentPlayerIndex;
+    if(typeof lastSpinResult === "number"){
+      //landed on a cash value
+      banked += lastSpinResult;
+      message = `${players[currentPlayerIndex].name} has earned $${lastSpinResult}! (Added to Round Bank)`;
+    }else{
+      //landed on either "BANKRUPT" or "LOSE A TURN"
+      if(lastSpinResult === "BANKRUPT"){
+        banked = 0;
+        toBankrupt = true;
+        message = `${players[currentPlayerIndex].name} landed on BANKRUPT and loses all their money from this round!`;
+      }else{
+        toSkip = true;
+        message = `${players[currentPlayerIndex].name} loses a turn!`;
+      }//if-else
+    }//if-else
 
-    if (pick === "BANKRUPT") {
-      updatePlayerByIndex(me, (p) => ({ ...p, roundBank: 0, bankrupt: true }));
-      setMessage(
-        `${players[me].name} landed on BANKRUPT and loses all round money.`
-      );
-      nextPlayer();
-      return;
-    }
+    //update player info as needed
+    updatePlayerByIndex(currentPlayerIndex, (p) => ({ ...p, roundBank: banked, bankrupt: toBankrupt}));
+    setMessage(message);
 
-    if (pick === "LOSE A TURN") {
-      updatePlayerByIndex(me, (p) => ({ ...p, bankrupt: false }));
-      setMessage(`${players[me].name} loses a turn.`);
-      nextPlayer();
-      return;
-    }
+    //skip player as needed
+    if(toSkip) nextPlayer();
+  }//func
 
-    if (typeof pick === "number") {
-      updatePlayerByIndex(me, (p) => ({
-        ...p,
-        roundBank: p.roundBank + pick,
-        bankrupt: false,
-      }));
-      setMessage(`${players[me].name} spun $${pick}. (Added to Round Bank)`);
-    }
-  }
+  const roundMover = (code) => {
+    let message = "Message goes here";
+    let isRoundEnded = false;
+    let isTotalReset = false;
+    let toSetRound = round;
 
-  function endRoundBankToTotal() {
-    setRound(round + 1);
+    //by default, just reset the round because it's the simplest
+    switch(code){
+      case "ROUND_ENDED":
+        isRoundEnded = true;
+        message = "Round ended; unbanked money added to player banks.";
+        toSetRound = round + 1;
+        break;
+      case "TOTAL_RESET":
+        isTotalReset = true;
+        message = "New Game: All totals reset."
+        toSetRound = 0;
+        break;
+      case "ROUND_RESET":
+      default:
+        message = "Round reset; unbanked money cleared.";
+        break;
+    }//switch
+
+    //update players, message, spin result, and the round number
     setPlayers((prev) =>
       prev.map((p) => ({
         ...p,
-        totalBank: p.totalBank + p.roundBank,
+        totalBank: isTotalReset ? 0 : (p.totalBank + (isRoundEnded ? p.roundBank : 0)),
         roundBank: 0,
         bankrupt: false,
       }))
     );
-    setMessage("Round ended. Round Banks added to Total Banks.");
+    setMessage(message);
     setLastSpinResult("---");
-  }
+    setRound(toSetRound);
+  }//func
 
-  function resetRoundOnly() {
-    setPlayers((prev) =>
-      prev.map((p) => ({ ...p, roundBank: 0, bankrupt: false }))
-    );
-    setMessage("Round reset. Round Banks cleared.");
-    setLastSpinResult("---");
-  }
-
-  function resetTotals() {
-    setPlayers((prev) =>
-      prev.map((p) => ({ ...p, roundBank: 0, totalBank: 0, bankrupt: false }))
-    );
-    setMessage("All totals reset. New game.");
-    setLastSpinResult("---");
-  }
-
-  function shuffleTurnOrder() {
+  const shuffleTurnOrder = () => {
     const start = Math.floor(Math.random() * players.length);
     setCurrentPlayerIndex(start);
     setMessage(`Player to start: ${players[start].name}.`);
-  }
+  }//func
 
-  return (
+  return(
     <>
       <h2>PLAYERS</h2>
       <div style={{ marginBottom: "0.75rem" }}>
@@ -140,15 +134,15 @@ export default function Player({
       </div>
       <br />
       <br />
-      <button onClick={endRoundBankToTotal} style={{ marginRight: "0.5rem" }}>
+      <button onClick={() => roundMover("ROUND_ENDED")} style={{ marginRight: "0.5rem" }}>
         End Round (Total Bank)
       </button>
       <br />
       <br />
-      <button onClick={resetRoundOnly} style={{ marginRight: "0.5rem" }}>
+      <button onClick={() => roundMover("ROUND_RESET")} style={{ marginRight: "0.5rem" }}>
         Reset Round
       </button>
-      <button onClick={resetTotals} style={{ marginRight: "0.5rem" }}>
+      <button onClick={() => roundMover("TOTAL_RESET")} style={{ marginRight: "0.5rem" }}>
         Reset Totals
       </button>
       <br />
@@ -158,3 +152,5 @@ export default function Player({
     </>
   );
 }
+
+export default Player;

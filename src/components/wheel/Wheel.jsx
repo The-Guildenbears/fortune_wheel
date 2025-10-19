@@ -3,7 +3,7 @@ import { Wheel as RouletteWheel } from "react-custom-roulette";
 import "./wheel.css";
 import CreateWheel from "./CreateWheel";
 
-export function Wheel({ round, setWinner }) {
+const Wheel = ({ round, setWinner }) => {
   const [wheel, setWheel] = useState([]);
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(0);
@@ -17,7 +17,7 @@ export function Wheel({ round, setWinner }) {
       const newPrizeNumber = Math.floor(Math.random() * wheel.length);
       setPrizeNumber(newPrizeNumber);
       setMustSpin(true);
-    }
+    }//if
   };
 
   const handleStopSpinning = () => {
@@ -26,10 +26,9 @@ export function Wheel({ round, setWinner }) {
   };
 
   const wheelData = wheel.map((segment) => ({
-    option:
-      typeof segment.val === "number"
-        ? `$${String(segment.val).split("").join("\n")}`
-        : segment.val,
+    option: (typeof segment.val === "number") ? 
+      `$${String(segment.val).split("").join("\n")}`
+      : segment.val,
     style: {
       backgroundColor: segment.col,
     },
@@ -39,7 +38,7 @@ export function Wheel({ round, setWinner }) {
     segment.val === "LOSE TURN" ? "black" : "white"
   );
 
-  return (
+  return (<>
     <div className="wheel-container">
       <h1>THE WHEEL</h1>
       <h2>Round {round}</h2>
@@ -74,5 +73,7 @@ export function Wheel({ round, setWinner }) {
         </div>
       )}
     </div>
-  );
-}
+  </>);
+}//component
+
+export default Wheel;
