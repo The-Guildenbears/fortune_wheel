@@ -63,6 +63,7 @@ const Player = ({
   }//func
 
   const roundMover = (code) => {
+    //keep track of all values used to update the round
     let message = "Message goes here";
     let isRoundEnded = false;
     let isTotalReset = false;
