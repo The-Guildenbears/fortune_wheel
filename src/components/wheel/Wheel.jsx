@@ -17,7 +17,7 @@ const Wheel = ({ round, setWinner }) => {
       const newPrizeNumber = Math.floor(Math.random() * wheel.length);
       setPrizeNumber(newPrizeNumber);
       setMustSpin(true);
-    }//if
+    } //if
   };
 
   const handleStopSpinning = () => {
@@ -26,9 +26,10 @@ const Wheel = ({ round, setWinner }) => {
   };
 
   const wheelData = wheel.map((segment) => ({
-    option: (typeof segment.val === "number") ? 
-      `$${String(segment.val).split("").join("\n")}`
-      : segment.val,
+    option:
+      typeof segment.val === "number"
+        ? `$${String(segment.val).split("").join("\n")}`
+        : segment.val,
     style: {
       backgroundColor: segment.col,
     },
@@ -38,42 +39,43 @@ const Wheel = ({ round, setWinner }) => {
     segment.val === "LOSE TURN" ? "black" : "white"
   );
 
-  return (<>
-    <div className="wheel-container">
-      <h1>THE WHEEL</h1>
-      <h2>Round {round}</h2>
+  return (
+    <>
+      <div className="wheel-container">
+        <h1>THE WHEEL</h1>
+        <h2>Round {round}</h2>
 
-      <div className="controls">
-        <button onClick={handleSpinClick} disabled={mustSpin}>
-          {mustSpin ? "Spinning..." : "SPIN"}
-        </button>
-      </div>
-      {wheelData.length > 0 && (
-        <div className="wheel-wrapper">
-          <RouletteWheel
-            mustStartSpinning={mustSpin}
-            prizeNumber={prizeNumber}
-            data={wheelData}
-            textColors={textColors}
-            onStopSpinning={handleStopSpinning}
-            backgroundColors={["#3e3e3e", "#ff1100ff"]}
-            fontSize={16}
-            outerBorderColor="#333333"
-            outerBorderWidth={1}
-            innerBorderColor="#333333"
-            innerBorderWidth={0}
-            innerRadius={5}
-            radiusLineColor="#333333"
-            radiusLineWidth={1}
-            spinDuration={0.4}
-            startingOptionIndex={0}
-            perpendicularText={false}
-            textDistance={60}
-          />
+        <div className="controls">
+          <button onClick={handleSpinClick} disabled={mustSpin}>
+            {mustSpin ? "Spinning..." : "SPIN"}
+          </button>
         </div>
-      )}
-    </div>
-  </>);
-}//component
+        {wheelData.length > 0 && (
+          <div className="wheel-wrapper">
+            <RouletteWheel
+              mustStartSpinning={mustSpin}
+              prizeNumber={prizeNumber}
+              data={wheelData}
+              textColors={textColors}
+              onStopSpinning={handleStopSpinning}
+              backgroundColors={["#3e3e3e", "#ff1100ff"]}
+              fontSize={16}
+              outerBorderColor="#333333"
+              outerBorderWidth={1}
+              innerBorderColor="#333333"
+              innerBorderWidth={0}
+              innerRadius={5}
+              radiusLineColor="#333333"
+              radiusLineWidth={1}
+              spinDuration={0.4}
+              perpendicularText={false}
+              textDistance={60}
+            />
+          </div>
+        )}
+      </div>
+    </>
+  );
+}; //component
 
 export default Wheel;
