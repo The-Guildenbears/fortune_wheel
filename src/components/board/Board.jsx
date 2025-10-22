@@ -11,6 +11,7 @@ const Board = ({puzzleFragment, category}) => {
 
   //make the interactable rows with a loop
   //the keys determine which squares are white or green
+
   let autoRows = [];
   for(let i = 0; i < 2; i++){
     let row = [];
@@ -49,7 +50,6 @@ const Board = ({puzzleFragment, category}) => {
   return (
     <>
       <div>
-        <h1>THE BOARD</h1>
         <div id="board_grid">
           <BoardFakeRow/>
 

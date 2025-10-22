@@ -14,9 +14,12 @@ const Wheel = ({ round, setWinner }) => {
 
   const handleSpinClick = () => {
     if (!mustSpin && wheel.length > 0) {
+      //starting spinning
+      setMustSpin(true);
+
+      //decide winning value
       const newPrizeNumber = Math.floor(Math.random() * wheel.length);
       setPrizeNumber(newPrizeNumber);
-      setMustSpin(true);
     }//if
   };
 
@@ -25,6 +28,7 @@ const Wheel = ({ round, setWinner }) => {
     setWinner(wheel[prizeNumber].val);
   };
 
+  //create the wheel
   const wheelData = wheel.map((segment) => ({
     option: (typeof segment.val === "number") ? 
       `$${String(segment.val).split("").join("\n")}`
@@ -34,14 +38,14 @@ const Wheel = ({ round, setWinner }) => {
     },
   }));
 
+  //set color for the wedge text
   const textColors = wheel.map((segment) =>
     segment.val === "LOSE TURN" ? "black" : "white"
   );
 
   return (<>
     <div className="wheel-container">
-      <h1>THE WHEEL</h1>
-      <h2>Round {round}</h2>
+      <h3>Round {round}</h3>
 
       <div className="controls">
         <button onClick={handleSpinClick} disabled={mustSpin}>
@@ -66,7 +70,6 @@ const Wheel = ({ round, setWinner }) => {
             radiusLineColor="#333333"
             radiusLineWidth={1}
             spinDuration={0.4}
-            startingOptionIndex={0}
             perpendicularText={false}
             textDistance={60}
           />
