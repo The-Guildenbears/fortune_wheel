@@ -14,6 +14,7 @@ import { getPuzzles } from "./services/getPuzzles";
 import GuessedLetters from "./components/guessedletters/GuessedLetters";
 import { roundMover } from "./services/roundMover";
 import { handleSpinResult } from "./services/handleSpinResult";
+import Keyboard from "./components/keyboard/Keyboard";
 
 // the component
 const App = () => {
@@ -29,7 +30,7 @@ const App = () => {
   const [puzzleFragment, setPuzzleFragment] = useState("");
 
   // data hooks for guessed letters
-  const [guessed, setGuessed] = useState([]);
+  const [guessed, setGuessed] = useState(new Set());
 
   // player data hooks
   const [players, setPlayers] = useState([
@@ -95,7 +96,7 @@ const App = () => {
         if(ch === " "){
           res += ch;
         }else{
-           if(guessed.includes(ch)){
+           if(guessed.has(ch)){
               res += ch;
             }else {
               res += "*";
@@ -107,7 +108,7 @@ const App = () => {
     }//if
   }, [guessed, puzzles, puzzlePicked]);//useEffect
 
-  // ------------------ vowel buying logic ------------------
+  // ------------------ letter buying logic ------------------
 
   const handleBuyClick = () => {
     setShowVowels(players[currentPlayerIndex].roundBank >= 500);
@@ -124,7 +125,7 @@ const App = () => {
     );
     if (!confirmed) return;
 
-    if(guessed.includes(vowel)){
+    if(guessed.has(vowel)){
       //This shouldn't show up but just in case
       alert("This vowel has already been guessed!\nFortunately, your money will not be spent.");
     }else{
@@ -134,10 +135,30 @@ const App = () => {
       );
       setPlayers(updatedPlayers);
 
-      setGuessed([...guessed, vowel]);
+      setGuessed(prev => {
+        //if letter was already guessed, do nothing
+        if (prev.has(vowel)) return prev;
+        //make a copy of previously guessed letters
+        const next = new Set(prev);
+        next.add(vowel);
+        return next;
+      });
     }//if-else
 
     setShowVowels(false);
+  };
+
+  const onLetterPicked = (letter) => {
+    
+    //updates the list of guessed letters
+    setGuessed(prev => {
+      //if letter was already guessed, do nothing
+      if (prev.has(letter)) return prev;
+      //make a copy of previously guessed letters
+      const next = new Set(prev);
+      next.add(letter);
+      return next;
+    });
   };
 
   // ------------------ wheel logic ------------------
@@ -145,7 +166,7 @@ const App = () => {
   useEffect(() => {
     const toSkip = handleSpinResult(players, setPlayers, currentPlayerIndex, lastSpinResult, setWheelMessage);
     if(toSkip) nextPlayer();
-  }, [lastSpinResult])
+  }, [lastSpinResult]);
 
   // ------------------ round and turn logic ------------------
 
@@ -200,6 +221,17 @@ const App = () => {
         <Wheel round={round} setWinner={setLastSpinResult}/>
       </div>
 
+      <Keyboard
+          guessedLetters={[...guessed]}
+          setGuessedLetters={(updater) => {
+            const nextArray =
+              typeof updater === "function" ? updater([...guessed]) : updater;
+        
+            setGuessed(new Set(nextArray.map((ch) => ch)));
+          }}
+          onLetterPicked={(ch) => onLetterPicked(ch.toUpperCase())}
+        />
+
       {/* Player Management */}
       <Player
         players={players}
@@ -253,7 +285,7 @@ const App = () => {
                 key={v}
                 onClick={() => buyVowel(v)}
                 disabled={
-                  guessed.includes(v) || players[currentPlayerIndex].roundBank < 500
+                  guessed.has(v) || players[currentPlayerIndex].roundBank < 500
                 }
                 style={{
                   backgroundColor: "#90ee90",

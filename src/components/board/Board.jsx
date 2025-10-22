@@ -29,7 +29,7 @@ const Board = ({puzzleFragment, category}) => {
     for(let i = 0; i < 24; i++){
       const square = document.getElementById("board_square_"+i);
       if(square){
-        square.style.backgroundColor = "green";
+        square.style.backgroundColor = "mediumseagreen";
         square.innerHTML = "";
       }
     }
