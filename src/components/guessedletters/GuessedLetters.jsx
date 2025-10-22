@@ -2,7 +2,7 @@ const GuessedLetters = ({guessed}) => {
     // parameters:
     // "guessed" is an arraycontaining character-wide strings
 
-    const guessedString = [...guessed].join(", ");
+    const guessedString = guessed.join(", ");
     
     return(<>
         <div>

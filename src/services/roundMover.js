@@ -1,4 +1,4 @@
-export const roundMover = (code, round, setRound, setLastSpinResult, setPlayers, setMessage) => {
+export const roundMover = (code, round, setRound, setLastSpinResult, setPlayers, setMessage, setGuessed) => {
     // keep track of all values used to update the round
     let message = "Message goes here";
     let isRoundEnded = false;
@@ -35,4 +35,5 @@ export const roundMover = (code, round, setRound, setLastSpinResult, setPlayers,
     setMessage(message);
     setLastSpinResult("---");
     setRound(toSetRound);
+    setGuessed([]);
   }//func

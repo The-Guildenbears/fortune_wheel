@@ -15,6 +15,7 @@ import GuessedLetters from "./components/guessedletters/GuessedLetters";
 import { roundMover } from "./services/roundMover";
 import { handleSpinResult } from "./services/handleSpinResult";
 import Keyboard from "./components/keyboard/Keyboard";
+import buyVowel from "./services/buyVowel";
 
 // the component
 const App = () => {
@@ -30,7 +31,7 @@ const App = () => {
   const [puzzleFragment, setPuzzleFragment] = useState("");
 
   // data hooks for guessed letters
-  const [guessed, setGuessed] = useState(new Set());
+  const [guessed, setGuessed] = useState([]);
 
   // player data hooks
   const [players, setPlayers] = useState([
@@ -48,13 +49,8 @@ const App = () => {
   const [round, setRound] = useState(0);
   
   // letter data hooks
-  const consonants = [
-    ["Q", "W", "R", "T", "Y", "P"],
-    ["S", "D", "F", "G", "H", "J", "K", "L"],
-    ["Z", "X", "C", "V", "B", "N", "M"],
-  ];
   const vowels = ["A", "E", "I", "O", "U"];
-  const [showVowels, setShowVowels] = useState(false);
+  const [letterToBuy, setLetterToBuy] = useState("");
 
   // ------------------ puzzle logic ------------------
 
@@ -96,7 +92,7 @@ const App = () => {
         if(ch === " "){
           res += ch;
         }else{
-           if(guessed.has(ch)){
+           if(guessed.includes(ch)){
               res += ch;
             }else {
               res += "*";
@@ -110,62 +106,36 @@ const App = () => {
 
   // ------------------ letter buying logic ------------------
 
-  const handleBuyClick = () => {
-    setShowVowels(players[currentPlayerIndex].roundBank >= 500);
-  };
-
-  const buyVowel = (vowel) => {
-    if (players[currentPlayerIndex].roundBank < 500) {
-      alert(`${players[currentPlayerIndex].name} does not have enough money to buy a vowel!`);
-      return;
+  useEffect(() => {
+    if(letterToBuy.length === 1){
+      onLetterPicked(letterToBuy);
     }//if
-
-    const confirmed = window.confirm(
-      `${players[currentPlayerIndex].name} wants to buy vowel ${vowel} for $500?`
-    );
-    if (!confirmed) return;
-
-    if(guessed.has(vowel)){
-      //This shouldn't show up but just in case
-      alert("This vowel has already been guessed!\nFortunately, your money will not be spent.");
-    }else{
-      // Subtract $500 from the current player's round bank
-      const updatedPlayers = players.map((p, i) =>
-        i === currentPlayerIndex ? { ...p, roundBank: p.roundBank - 500 } : p
-      );
-      setPlayers(updatedPlayers);
-
-      setGuessed(prev => {
-        //if letter was already guessed, do nothing
-        if (prev.has(vowel)) return prev;
-        //make a copy of previously guessed letters
-        const next = new Set(prev);
-        next.add(vowel);
-        return next;
-      });
-    }//if-else
-
-    setShowVowels(false);
-  };
+  }, [letterToBuy]);
 
   const onLetterPicked = (letter) => {
-    
-    //updates the list of guessed letters
-    setGuessed(prev => {
-      //if letter was already guessed, do nothing
-      if (prev.has(letter)) return prev;
-      //make a copy of previously guessed letters
-      const next = new Set(prev);
-      next.add(letter);
-      return next;
-    });
+    let toAddLetter = true;
+
+    if(vowels.includes(letter)){
+      toAddLetter = buyVowel(letter, players, setPlayers, currentPlayerIndex, guessed);
+    }
+
+    if(toAddLetter){
+      setGuessed([...guessed, letter]);
+    }
   };
 
   // ------------------ wheel logic ------------------
 
+  const hasRun = useRef(false);
   useEffect(() => {
     const toSkip = handleSpinResult(players, setPlayers, currentPlayerIndex, lastSpinResult, setWheelMessage);
-    if(toSkip) nextPlayer();
+
+    if(!hasRun.current && toSkip){
+      nextPlayer();
+      hasRun.current = true;
+    }else{
+      hasRun.current = false;
+    }
   }, [lastSpinResult]);
 
   // ------------------ round and turn logic ------------------
@@ -184,7 +154,7 @@ const App = () => {
   
   // only difference between calling a round move in the component is the code
   const requestRoundMove = (code) => {
-    roundMover(code, round, setRound, setLastSpinResult, setPlayers, setWheelMessage);
+    roundMover(code, round, setRound, setLastSpinResult, setPlayers, setWheelMessage, setGuessed);
   }//const
 
   // escape freezing when all players are bankrupt
@@ -222,14 +192,8 @@ const App = () => {
       </div>
 
       <Keyboard
-          guessedLetters={[...guessed]}
-          setGuessedLetters={(updater) => {
-            const nextArray =
-              typeof updater === "function" ? updater([...guessed]) : updater;
-        
-            setGuessed(new Set(nextArray.map((ch) => ch)));
-          }}
-          onLetterPicked={(ch) => onLetterPicked(ch.toUpperCase())}
+          guessedLetters={guessed}
+          setLetterToBuy={setLetterToBuy}
         />
 
       {/* Player Management */}
@@ -265,40 +229,6 @@ const App = () => {
       <br />
 
       <div style={{ marginTop: "0.75rem" }}>{wheelMessage}</div>
-
-      {/* Buy a Vowel Section */}
-      <div style={{ marginTop: "20px" }}>
-        {!showVowels && (
-          <button
-            onClick={handleBuyClick}
-            disabled={players[currentPlayerIndex].roundBank < 500}
-            style={{ margin: "5px", padding: "8px 12px" }}
-          >
-            Buy a Vowel ($500)
-          </button>
-        )}
-
-        {showVowels && (
-          <div style={{ marginTop: "10px" }}>
-            {vowels.map((v) => (
-              <button
-                key={v}
-                onClick={() => buyVowel(v)}
-                disabled={
-                  guessed.has(v) || players[currentPlayerIndex].roundBank < 500
-                }
-                style={{
-                  backgroundColor: "#90ee90",
-                  margin: "5px",
-                  padding: "8px 12px",
-                }}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
     </>
   );
 }
