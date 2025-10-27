@@ -47,7 +47,7 @@ const App = () => {
 
   // round data hooks
   const [round, setRound] = useState(0);
-  
+
   // letter data hooks
   const vowels = ["A", "E", "I", "O", "U"];
   const [letterToBuy, setLetterToBuy] = useState("");
@@ -56,16 +56,15 @@ const App = () => {
   const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
   const [sortedPlayers, setSortedPlayers] = useState([]);
 
-
   // ------------------ puzzle logic ------------------
 
   // get the puzzles only once
   useEffect(() => {
     // skip if data already fetched; otherwise flag fetching
-    if(!fetching.current) return;
+    if (!fetching.current) return;
     fetching.current = false;
 
-    const loadPuzzles = async() => {
+    const loadPuzzles = async () => {
       try {
         const data = await getPuzzles();
         console.log(data);
@@ -75,11 +74,11 @@ const App = () => {
       } finally {
         //Finish load anyways
         setLoading(false);
-      }//try-catch-finally
+      } //try-catch-finally
     };
-    
+
     loadPuzzles();
-  }, []);//useEffect
+  }, []); //useEffect
 
   // pick a new puzzle whenever a new round starts
   useEffect(() => {
@@ -94,84 +93,94 @@ const App = () => {
 
   // set up puzzle fragment to pass along to board
   useEffect(() => {
-    if(puzzles.length > 0){
+    if (puzzles.length > 0) {
       let str = puzzles[puzzlePicked].puzzle;
       let res = "";
-      for(let ch of str){
-        if(ch === " "){
+      for (let ch of str) {
+        if (ch === " ") {
           res += ch;
-        }else{
-           if(guessed.includes(ch)){
-              res += ch;
-            }else {
-              res += "*";
-            }//if-else
-        }//if-else
-      }//for
+        } else {
+          if (guessed.includes(ch)) {
+            res += ch;
+          } else {
+            res += "*";
+          } //if-else
+        } //if-else
+      } //for
 
       setPuzzleFragment(res);
-    }//if
-  }, [guessed, puzzles, puzzlePicked]);//useEffect
+    } //if
+  }, [guessed, puzzles, puzzlePicked]); //useEffect
 
   // ------------------ letter buying logic ------------------
 
   useEffect(() => {
-    if(letterToBuy.length === 1){
+    if (letterToBuy.length === 1) {
       onLetterPicked(letterToBuy);
-    }//if
+    } //if
   }, [letterToBuy]);
 
   const onLetterPicked = (letter) => {
-  let toAddLetter = true;
+    let toAddLetter = true;
 
-  if(vowels.includes(letter)){
-    toAddLetter = buyVowel(letter, players, setPlayers, currentPlayerIndex, guessed);
-  }
+    if (vowels.includes(letter)) {
+      toAddLetter = buyVowel(
+        letter,
+        players,
+        setPlayers,
+        currentPlayerIndex,
+        guessed
+      );
+    }
 
-  if(toAddLetter){
-    const newGuessed = [...guessed, letter.toUpperCase()];
-    setGuessed(newGuessed);
+    if (toAddLetter) {
+      const newGuessed = [...guessed, letter.toUpperCase()];
+      setGuessed(newGuessed);
 
-    const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase();
-    if(!currentPuzzle.includes(letter.toUpperCase())){
-      alert(`${letter} is incorrect! Moving to next player.`);
-      nextPlayer();
-    } else {
-      // Check if all letters are revealed
-      const revealed = currentPuzzle
-        .split("")
-        .filter(ch => /[A-Z]/.test(ch))
-        .every(ch => newGuessed.includes(ch));
+      const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase();
+      if (!currentPuzzle.includes(letter.toUpperCase())) {
+        alert(`${letter} is incorrect! Moving to next player.`);
+        nextPlayer();
+      } else {
+        // Check if all letters are revealed
+        const revealed = currentPuzzle
+          .split("")
+          .filter((ch) => /[A-Z]/.test(ch))
+          .every((ch) => newGuessed.includes(ch));
 
-      if(revealed){
-        alert(`All letters revealed! ${players[currentPlayerIndex].name} wins the round!`);
+        if (revealed) {
+          alert(
+            `All letters revealed! ${players[currentPlayerIndex].name} wins the round!`
+          );
 
-        const updatedPlayers = players.map((p, i) => {
-          if(i === currentPlayerIndex){
-            return { ...p, totalBank: p.totalBank + p.roundBank, roundBank: 0 };
-          } else {
-            return { ...p, roundBank: 0 };
-          }
-        });
+          const updatedPlayers = players.map((p, i) => {
+            if (i === currentPlayerIndex) {
+              return {
+                ...p,
+                totalBank: p.totalBank + p.roundBank,
+                roundBank: 0,
+              };
+            } else {
+              return { ...p, roundBank: 0 };
+            }
+          });
 
-        setPlayers(updatedPlayers);
-        requestRoundMove("ROUND_ENDED");
+          setPlayers(updatedPlayers);
+          requestRoundMove("ROUND_ENDED");
+        }
       }
     }
-  }
-};
-
-
+  };
 
   // ---------------- full clue logic ---------------
 
   const onClueGuess = (guess) => {
     const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase().trim();
-    if(guess.toUpperCase().trim() === currentPuzzle){
+    if (guess.toUpperCase().trim() === currentPuzzle) {
       alert(`Correct! ${players[currentPlayerIndex].name} wins the round!`);
-      
+
       const updatedPlayers = players.map((p, i) => {
-        if(i === currentPlayerIndex){
+        if (i === currentPlayerIndex) {
           return { ...p, totalBank: p.totalBank + p.roundBank, roundBank: 0 };
         } else {
           return { ...p, roundBank: 0 };
@@ -186,17 +195,22 @@ const App = () => {
     }
   };
 
-
   // ------------------ wheel logic ------------------
 
   const hasRun = useRef(false);
   useEffect(() => {
-    const toSkip = handleSpinResult(players, setPlayers, currentPlayerIndex, lastSpinResult, setWheelMessage);
+    const toSkip = handleSpinResult(
+      players,
+      setPlayers,
+      currentPlayerIndex,
+      lastSpinResult,
+      setWheelMessage
+    );
 
-    if(!hasRun.current && toSkip){
+    if (!hasRun.current && toSkip) {
       nextPlayer();
       hasRun.current = true;
-    }else{
+    } else {
       hasRun.current = false;
     }
   }, [lastSpinResult]);
@@ -204,37 +218,43 @@ const App = () => {
   // ------------------ round and turn logic ------------------
 
   const nextPlayer = () => {
-    let ind = (currentPlayerIndex < 2 ? currentPlayerIndex + 1 : 0);
+    let ind = currentPlayerIndex < 2 ? currentPlayerIndex + 1 : 0;
 
-    while(players[ind].bankrupt){
-      ind = (ind < 2 ? ind + 1 : 0);
-    }//while
+    while (players[ind].bankrupt) {
+      ind = ind < 2 ? ind + 1 : 0;
+    } //while
 
-    setCurrentPlayerIndex(ind)
+    setCurrentPlayerIndex(ind);
     setLastSpinResult("---");
     setWheelMessage("");
-  }//func
-
+  }; //func
 
   const showFinalResults = () => {
-  // sort players by totalBank descending
-  const sorted = [...players].sort((a, b) => b.totalBank - a.totalBank);
-  setSortedPlayers(sorted);
-  setShowFinalWinnerModal(true);
-};
+    // sort players by totalBank descending
+    const sorted = [...players].sort((a, b) => b.totalBank - a.totalBank);
+    setSortedPlayers(sorted);
+    setShowFinalWinnerModal(true);
+  };
 
-  
   // only difference between calling a round move in the component is the code
   const requestRoundMove = (code) => {
-    roundMover(code, round, setRound, setLastSpinResult, setPlayers, setWheelMessage, setGuessed);
-  }//const
+    roundMover(
+      code,
+      round,
+      setRound,
+      setLastSpinResult,
+      setPlayers,
+      setWheelMessage,
+      setGuessed
+    );
+  }; //const
 
   // escape freezing when all players are bankrupt
   useEffect(() => {
-    const allBankrupt = players[0].bankrupt && players[1].bankrupt && players[2].bankrupt;
-    if(allBankrupt) requestRoundMove("ROUND_ENDED");
+    const allBankrupt =
+      players[0].bankrupt && players[1].bankrupt && players[2].bankrupt;
+    if (allBankrupt) requestRoundMove("ROUND_ENDED");
   }, [players]);
-
 
   // show final results after round 3 ends
   useEffect(() => {
@@ -243,45 +263,48 @@ const App = () => {
     }
   }, [round]);
 
-
   // ------------------ the render ------------------
 
-  return ( (puzzles.length === 0) ? <>
-      {loading ? <>
-        <h1>Please Wait</h1>
-        <p>Loading puzzles...</p>
-      </> : <>
-        <h1>Oh no!</h1>
-        <p>It looks like the puzzles couldn't load in. 
-           Please refresh the page and try again.
-        </p>
-      </>}
-    </>: 
+  return puzzles.length === 0 ? (
+    <>
+      {loading ? (
+        <>
+          <h1>Please Wait</h1>
+          <p>Loading puzzles...</p>
+        </>
+      ) : (
+        <>
+          <h1>Oh no!</h1>
+          <p>
+            It looks like the puzzles couldn't load in. Please refresh the page
+            and try again.
+          </p>
+        </>
+      )}
+    </>
+  ) : (
     <>
       <div>Aidan, Tannah, Emma and Tarik's Wheel of Fortune</div>
-      
+
       <div id="row_board" className="box">
-        <Board puzzleFragment={puzzleFragment} category={puzzles[puzzlePicked].category} />
-      </div>
-      
-      <div id="row_guessed" className="box">
-        <GuessedLetters guessed={guessed}/>
-      </div>
-      
-      <div id="row_wheel" className="box">
-        <Wheel round={round} setWinner={setLastSpinResult}/>
+        <Board
+          puzzleFragment={puzzleFragment}
+          category={puzzles[puzzlePicked].category}
+        />
       </div>
 
-      <Keyboard
-          guessedLetters={guessed}
-          setLetterToBuy={setLetterToBuy}
-        />
+      <div id="row_guessed" className="box">
+        <GuessedLetters guessed={guessed} />
+      </div>
+
+      <div id="row_wheel" className="box">
+        <Wheel round={round} setWinner={setLastSpinResult} />
+      </div>
+
+      <Keyboard guessedLetters={guessed} setLetterToBuy={setLetterToBuy} />
 
       {/* Player Management */}
-      <Player
-        players={players}
-        currentPlayerIndex={currentPlayerIndex}
-      />
+      <Player players={players} currentPlayerIndex={currentPlayerIndex} />
 
       {/* Solve Full Puzzle */}
       <div style={{ marginBottom: "0.5rem", marginTop: "1rem" }}>
@@ -291,11 +314,13 @@ const App = () => {
           id="clueInput"
           style={{ marginRight: "0.5rem" }}
         />
-        <button onClick={() => {
-          const guess = document.getElementById("clueInput").value;
-          onClueGuess(guess);
-          document.getElementById("clueInput").value = "";
-        }}>
+        <button
+          onClick={() => {
+            const guess = document.getElementById("clueInput").value;
+            onClueGuess(guess);
+            document.getElementById("clueInput").value = "";
+          }}
+        >
           Solve Puzzle
         </button>
       </div>
@@ -311,16 +336,25 @@ const App = () => {
       <br />
       <br />
 
-      <button onClick={() => requestRoundMove("ROUND_ENDED")} style={{ marginRight: "0.5rem" }}>
+      <button
+        onClick={() => requestRoundMove("ROUND_ENDED")}
+        style={{ marginRight: "0.5rem" }}
+      >
         End Round (Total Bank)
       </button>
       <br />
       <br />
 
-      <button onClick={() => requestRoundMove("ROUND_RESET")} style={{ marginRight: "0.5rem" }}>
+      <button
+        onClick={() => requestRoundMove("ROUND_RESET")}
+        style={{ marginRight: "0.5rem" }}
+      >
         Reset Round
       </button>
-      <button onClick={() => requestRoundMove("TOTAL_RESET")} style={{ marginRight: "0.5rem" }}>
+      <button
+        onClick={() => requestRoundMove("TOTAL_RESET")}
+        style={{ marginRight: "0.5rem" }}
+      >
         Reset Totals
       </button>
       <br />
@@ -329,58 +363,79 @@ const App = () => {
       <div style={{ marginTop: "0.75rem" }}>{wheelMessage}</div>
 
       {showFinalWinnerModal && (
-      <div style={{
-        position: "fixed",
-        top: 0, left: 0,
-        width: "100%", height: "100%",
-        backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 1000
-      }}>
-        <div style={{
-          backgroundColor: "#fff",
-          padding: "2rem",
-          borderRadius: "10px",
-          textAlign: "center",
-          width: "300px",
-          boxShadow: "0 0 15px rgba(0,0,0,0.3)",
-          position: "relative"
-        }}>
-          <h2>🏆 Game Over! </h2>
-          <p>1st Place: {sortedPlayers[2]?.name} (${sortedPlayers[0]?.totalBank})</p>
-          <p>2nd Place: {sortedPlayers[1]?.name} (${sortedPlayers[1]?.totalBank})</p>
-          <p>3rd Place: {sortedPlayers[0]?.name} (${sortedPlayers[2]?.totalBank})</p>
-
-          {/* Bonus Round Button */}
-          <button disabled style={{ marginTop: "1rem", padding: "0.5rem 1rem", cursor: "not-allowed" }}>
-            1st Place Proceed to Bonus Round
-          </button>
-
-          {/* Close Button */}
-          <button 
-            onClick={() => setShowFinalWinnerModal(false)} 
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
             style={{
-              marginTop: "0.5rem",
-              padding: "0.5rem 1rem",
-              display: "block",
-              marginLeft: "auto",
-              marginRight: "auto",
-              backgroundColor: "#ccc",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer"
+              backgroundColor: "#fff",
+              padding: "2rem",
+              borderRadius: "10px",
+              textAlign: "center",
+              width: "300px",
+              boxShadow: "0 0 15px rgba(0,0,0,0.3)",
+              position: "relative",
             }}
           >
-            Close
-          </button>
-        </div>
-      </div>
-    )}
+            <h2>🏆 Game Over! </h2>
+            <p>
+              1st Place: {sortedPlayers[2]?.name} ($
+              {sortedPlayers[0]?.totalBank})
+            </p>
+            <p>
+              2nd Place: {sortedPlayers[1]?.name} ($
+              {sortedPlayers[1]?.totalBank})
+            </p>
+            <p>
+              3rd Place: {sortedPlayers[0]?.name} ($
+              {sortedPlayers[2]?.totalBank})
+            </p>
 
+            {/* Bonus Round Button */}
+            <button
+              disabled
+              style={{
+                marginTop: "1rem",
+                padding: "0.5rem 1rem",
+                cursor: "not-allowed",
+              }}
+            >
+              1st Place Proceed to Bonus Round
+            </button>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowFinalWinnerModal(false)}
+              style={{
+                marginTop: "0.5rem",
+                padding: "0.5rem 1rem",
+                display: "block",
+                marginLeft: "auto",
+                marginRight: "auto",
+                backgroundColor: "#ccc",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
-}
+};
 
 export default App;
