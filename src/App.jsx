@@ -1,35 +1,67 @@
-//import styles
+// import styles
 import "./App.css";
 
-//import components
+// import components
 import Player from "./components/players/Player";
 import Board from "./components/board/Board";
-import { Wheel } from "./components/wheel/Wheel";
+import Wheel from "./components/wheel/Wheel";
 
-//import React hooks
+// import React hooks
 import { useEffect, useState, useRef } from "react";
 
-//import functions
+// import functions
 import { getPuzzles } from "./services/getPuzzles";
 import GuessedLetters from "./components/guessedletters/GuessedLetters";
+import { roundMover } from "./services/roundMover";
+import { handleSpinResult } from "./services/handleSpinResult";
+import Keyboard from "./components/keyboard/Keyboard";
+import buyVowel from "./services/buyVowel";
 
-//The component
+// the component
 const App = () => {
+  // --------- data hooks ---------
+
   // Startup data hooks
   const [puzzles, setPuzzles] = useState([]);
   const [loading, setLoading] = useState(true);
   const fetching = useRef(true);
 
-  // In-game data hooks
+  // puzzle data hooks
   const [puzzlePicked, setPuzzlePicked] = useState(0);
   const [puzzleFragment, setPuzzleFragment] = useState("");
 
-  // other game data
-  const guessed = new Set();
+  // data hooks for guessed letters
+  const [guessed, setGuessed] = useState([]);
 
-  //get the puzzles only once
+  // player data hooks
+  const [players, setPlayers] = useState([
+    { id: 1, name: "Player 1", roundBank: 0, totalBank: 0, bankrupt: false },
+    { id: 2, name: "Player 2", roundBank: 0, totalBank: 0, bankrupt: false },
+    { id: 3, name: "Player 3", roundBank: 0, totalBank: 0, bankrupt: false },
+  ]);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+
+  // wheel data hooks
+  const [lastSpinResult, setLastSpinResult] = useState("---");
+  const [wheelMessage, setWheelMessage] = useState("");
+
+  // round data hooks
+  const [round, setRound] = useState(0);
+  
+  // letter data hooks
+  const vowels = ["A", "E", "I", "O", "U"];
+  const [letterToBuy, setLetterToBuy] = useState("");
+
+  // for final winner modal
+  const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
+  const [sortedPlayers, setSortedPlayers] = useState([]);
+
+
+  // ------------------ puzzle logic ------------------
+
+  // get the puzzles only once
   useEffect(() => {
-    //skip if data already fetched; otherwise flag fetching
+    // skip if data already fetched; otherwise flag fetching
     if(!fetching.current) return;
     fetching.current = false;
 
@@ -49,14 +81,18 @@ const App = () => {
     loadPuzzles();
   }, []);//useEffect
 
-  //for rendering purposes, pick any puzzle string
+  // pick a new puzzle whenever a new round starts
   useEffect(() => {
-    if(puzzles.length > 0){
+    if (puzzles.length > 0 && round > 0) {
+      // pick a random puzzle
       setPuzzlePicked(Math.floor(Math.random() * puzzles.length));
-    }//if
-  }, [puzzles]);
 
-  //set up puzzle fragment to pass along to board
+      // reset guessed letters for the new puzzle
+      setGuessed([]);
+    }
+  }, [round, puzzles]);
+
+  // set up puzzle fragment to pass along to board
   useEffect(() => {
     if(puzzles.length > 0){
       let str = puzzles[puzzlePicked].puzzle;
@@ -65,7 +101,7 @@ const App = () => {
         if(ch === " "){
           res += ch;
         }else{
-           if(guessed.has(ch)){
+           if(guessed.includes(ch)){
               res += ch;
             }else {
               res += "*";
@@ -75,112 +111,274 @@ const App = () => {
 
       setPuzzleFragment(res);
     }//if
-  }, [guessed]);//useEffect
+  }, [guessed, puzzles, puzzlePicked]);//useEffect
 
-  // Player logic
-  const [players, setPlayers] = useState([
-    { id: 1, name: "Player 1", roundBank: 0, totalBank: 0, bankrupt: false },
-    { id: 2, name: "Player 2", roundBank: 0, totalBank: 0, bankrupt: false },
-    { id: 3, name: "Player 3", roundBank: 0, totalBank: 0, bankrupt: false },
-  ]);
+  // ------------------ letter buying logic ------------------
 
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const currentPlayer = players[currentPlayerIndex];
+  useEffect(() => {
+    if(letterToBuy.length === 1){
+      onLetterPicked(letterToBuy);
+    }//if
+  }, [letterToBuy]);
 
-  // ----- Vowel Buying Logic -----
-  const vowels = ["A", "E", "I", "O", "U"];
-  const [revealedVowels, setRevealedVowels] = useState([]);
-  const [showVowels, setShowVowels] = useState(false);
+  const onLetterPicked = (letter) => {
+  let toAddLetter = true;
 
-  const handleBuyClick = () => {
-    if (
-      currentPlayer.roundBank >= 500 &&
-      revealedVowels.length < vowels.length
-    ) {
-      setShowVowels(true);
+  if(vowels.includes(letter)){
+    toAddLetter = buyVowel(letter, players, setPlayers, currentPlayerIndex, guessed);
+  }
+
+  if(toAddLetter){
+    const newGuessed = [...guessed, letter.toUpperCase()];
+    setGuessed(newGuessed);
+
+    const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase();
+    if(!currentPuzzle.includes(letter.toUpperCase())){
+      alert(`${letter} is incorrect! Moving to next player.`);
+      nextPlayer();
+    } else {
+      // Check if all letters are revealed
+      const revealed = currentPuzzle
+        .split("")
+        .filter(ch => /[A-Z]/.test(ch))
+        .every(ch => newGuessed.includes(ch));
+
+      if(revealed){
+        alert(`All letters revealed! ${players[currentPlayerIndex].name} wins the round!`);
+
+        const updatedPlayers = players.map((p, i) => {
+          if(i === currentPlayerIndex){
+            return { ...p, totalBank: p.totalBank + p.roundBank, roundBank: 0 };
+          } else {
+            return { ...p, roundBank: 0 };
+          }
+        });
+
+        setPlayers(updatedPlayers);
+        requestRoundMove("ROUND_ENDED");
+      }
+    }
+  }
+};
+
+
+
+  // ---------------- full clue logic ---------------
+
+  const onClueGuess = (guess) => {
+    const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase().trim();
+    if(guess.toUpperCase().trim() === currentPuzzle){
+      alert(`Correct! ${players[currentPlayerIndex].name} wins the round!`);
+      
+      const updatedPlayers = players.map((p, i) => {
+        if(i === currentPlayerIndex){
+          return { ...p, totalBank: p.totalBank + p.roundBank, roundBank: 0 };
+        } else {
+          return { ...p, roundBank: 0 };
+        }
+      });
+
+      setPlayers(updatedPlayers);
+      requestRoundMove("ROUND_ENDED");
+    } else {
+      alert(`Incorrect! ${players[currentPlayerIndex].name}'s turn is over.`);
+      nextPlayer();
     }
   };
 
-  const buyVowel = (vowel) => {
-    if (currentPlayer.roundBank < 500) {
-      alert(`${currentPlayer.name} does not have enough money to buy a vowel!`);
-      return;
+
+  // ------------------ wheel logic ------------------
+
+  const hasRun = useRef(false);
+  useEffect(() => {
+    const toSkip = handleSpinResult(players, setPlayers, currentPlayerIndex, lastSpinResult, setWheelMessage);
+
+    if(!hasRun.current && toSkip){
+      nextPlayer();
+      hasRun.current = true;
+    }else{
+      hasRun.current = false;
     }
+  }, [lastSpinResult]);
 
-    const confirmed = window.confirm(
-      `${currentPlayer.name} wants to buy vowel ${vowel} for $500?`
-    );
-    if (!confirmed) return;
+  // ------------------ round and turn logic ------------------
 
-    // Subtract $500 from the current player's round bank
-    const updatedPlayers = players.map((p, i) =>
-      i === currentPlayerIndex ? { ...p, roundBank: p.roundBank - 500 } : p
-    );
-    setPlayers(updatedPlayers);
+  const nextPlayer = () => {
+    let ind = (currentPlayerIndex < 2 ? currentPlayerIndex + 1 : 0);
 
-    setRevealedVowels([...revealedVowels, vowel]);
-    setShowVowels(false);
-  };
+    while(players[ind].bankrupt){
+      ind = (ind < 2 ? ind + 1 : 0);
+    }//while
 
-  return ( (loading || puzzles.length === 0) ? <>
-      <h1>Please Wait</h1>
-      <p>Loading puzzles...</p>
+    setCurrentPlayerIndex(ind)
+    setLastSpinResult("---");
+    setWheelMessage("");
+  }//func
+
+
+  const showFinalResults = () => {
+  // sort players by totalBank descending
+  const sorted = [...players].sort((a, b) => b.totalBank - a.totalBank);
+  setSortedPlayers(sorted);
+  setShowFinalWinnerModal(true);
+};
+
+  
+  // only difference between calling a round move in the component is the code
+  const requestRoundMove = (code) => {
+    roundMover(code, round, setRound, setLastSpinResult, setPlayers, setWheelMessage, setGuessed);
+  }//const
+
+  // escape freezing when all players are bankrupt
+  useEffect(() => {
+    const allBankrupt = players[0].bankrupt && players[1].bankrupt && players[2].bankrupt;
+    if(allBankrupt) requestRoundMove("ROUND_ENDED");
+  }, [players]);
+
+
+  // show final results after round 3 ends
+  useEffect(() => {
+    if (round === 3) {
+      showFinalResults();
+    }
+  }, [round]);
+
+
+  // ------------------ the render ------------------
+
+  return ( (puzzles.length === 0) ? <>
+      {loading ? <>
+        <h1>Please Wait</h1>
+        <p>Loading puzzles...</p>
+      </> : <>
+        <h1>Oh no!</h1>
+        <p>It looks like the puzzles couldn't load in. 
+           Please refresh the page and try again.
+        </p>
+      </>}
     </>: 
     <>
-      <div>Aidan, Tanna, Emma and Tarik's Wheel of Fortune</div>
+      <div>Aidan, Tannah, Emma and Tarik's Wheel of Fortune</div>
       
       <div id="row_board" className="box">
         <Board puzzleFragment={puzzleFragment} category={puzzles[puzzlePicked].category} />
       </div>
       
       <div id="row_guessed" className="box">
-        <GuessedLetters guessedSet={guessed}/>
+        <GuessedLetters guessed={guessed}/>
       </div>
+      
+      <div id="row_wheel" className="box">
+        <Wheel round={round} setWinner={setLastSpinResult}/>
+      </div>
+
+      <Keyboard
+          guessedLetters={guessed}
+          setLetterToBuy={setLetterToBuy}
+        />
 
       {/* Player Management */}
       <Player
         players={players}
-        setPlayers={setPlayers}
         currentPlayerIndex={currentPlayerIndex}
-        setCurrentPlayerIndex={setCurrentPlayerIndex}
       />
 
-      {/* Buy a Vowel Section */}
-      <div style={{ marginTop: "20px" }}>
-        {!showVowels && (
-          <button
-            onClick={handleBuyClick}
-            disabled={
-              currentPlayer.roundBank < 500 ||
-              revealedVowels.length === vowels.length
-            }
-            style={{ margin: "5px", padding: "8px 12px" }}
-          >
-            Buy a Vowel ($500)
-          </button>
-        )}
-
-        {showVowels && (
-          <div style={{ marginTop: "10px" }}>
-            {vowels.map((v) => (
-              <button
-                key={v}
-                onClick={() => buyVowel(v)}
-                disabled={
-                  revealedVowels.includes(v) || currentPlayer.roundBank < 500
-                }
-                style={{
-                  backgroundColor: "#90ee90",
-                  margin: "5px",
-                  padding: "8px 12px",
-                }}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* Solve Full Puzzle */}
+      <div style={{ marginBottom: "0.5rem", marginTop: "1rem" }}>
+        <input
+          type="text"
+          placeholder="Guess the Clue"
+          id="clueInput"
+          style={{ marginRight: "0.5rem" }}
+        />
+        <button onClick={() => {
+          const guess = document.getElementById("clueInput").value;
+          onClueGuess(guess);
+          document.getElementById("clueInput").value = "";
+        }}>
+          Solve Puzzle
+        </button>
       </div>
+
+      <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
+        Next Player
+      </button>
+
+      {/* Round debug */}
+      <div style={{ marginBottom: "0.5rem" }}>
+        <strong>Last Spin Result:</strong> {lastSpinResult}
+      </div>
+      <br />
+      <br />
+
+      <button onClick={() => requestRoundMove("ROUND_ENDED")} style={{ marginRight: "0.5rem" }}>
+        End Round (Total Bank)
+      </button>
+      <br />
+      <br />
+
+      <button onClick={() => requestRoundMove("ROUND_RESET")} style={{ marginRight: "0.5rem" }}>
+        Reset Round
+      </button>
+      <button onClick={() => requestRoundMove("TOTAL_RESET")} style={{ marginRight: "0.5rem" }}>
+        Reset Totals
+      </button>
+      <br />
+      <br />
+
+      <div style={{ marginTop: "0.75rem" }}>{wheelMessage}</div>
+
+      {showFinalWinnerModal && (
+      <div style={{
+        position: "fixed",
+        top: 0, left: 0,
+        width: "100%", height: "100%",
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: "#fff",
+          padding: "2rem",
+          borderRadius: "10px",
+          textAlign: "center",
+          width: "300px",
+          boxShadow: "0 0 15px rgba(0,0,0,0.3)",
+          position: "relative"
+        }}>
+          <h2>🏆 Game Over! </h2>
+          <p>1st Place: {sortedPlayers[2]?.name} (${sortedPlayers[0]?.totalBank})</p>
+          <p>2nd Place: {sortedPlayers[1]?.name} (${sortedPlayers[1]?.totalBank})</p>
+          <p>3rd Place: {sortedPlayers[0]?.name} (${sortedPlayers[2]?.totalBank})</p>
+
+          {/* Bonus Round Button */}
+          <button disabled style={{ marginTop: "1rem", padding: "0.5rem 1rem", cursor: "not-allowed" }}>
+            1st Place Proceed to Bonus Round
+          </button>
+
+          {/* Close Button */}
+          <button 
+            onClick={() => setShowFinalWinnerModal(false)} 
+            style={{
+              marginTop: "0.5rem",
+              padding: "0.5rem 1rem",
+              display: "block",
+              marginLeft: "auto",
+              marginRight: "auto",
+              backgroundColor: "#ccc",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer"
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )}
+
     </>
   );
 }
