@@ -1,4 +1,4 @@
-export const roundMover = (code, round, setRound, setLastSpinResult, setPlayers, setMessage, setGuessed) => {
+export const roundMover = (code, round, setRound, setPlayers, setMessage) => {
     // keep track of all values used to update the round
     let message = "Message goes here";
     let isRoundEnded = false;
@@ -23,7 +23,7 @@ export const roundMover = (code, round, setRound, setLastSpinResult, setPlayers,
         break;
     }//switch
 
-    // update players, message, spin result, and the round number
+    // update players, message, and the round number
     setPlayers((prev) =>
       prev.map((p) => ({
         ...p,
@@ -33,7 +33,5 @@ export const roundMover = (code, round, setRound, setLastSpinResult, setPlayers,
       }))
     );
     setMessage(message);
-    setLastSpinResult("---");
     setRound(toSetRound);
-    setGuessed([]);
   }//func

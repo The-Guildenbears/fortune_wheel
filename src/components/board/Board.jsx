@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import BoardFakeRow from "./BoardFakeRow";
 
 const Board = ({puzzleFragment, category}) => {
-  //parameters:
+  // parameters:
   // "puzzleFragment" and "category" are both strings
 
   // width of rows is 12-14-14-12

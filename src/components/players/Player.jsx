@@ -1,16 +1,14 @@
 import PlayerCard from "./PlayerCard";
 
-const Player = ({
-  players,
-  currentPlayerIndex
-}) => {
+// display component for player cards
+const Player = ({ players, currentPlayerIndex}) => {
 
   return(
     <>
       <h3>PLAYERS</h3>
       <div style={{ marginBottom: "0.75rem" }}>
         <div style={{ marginBottom: "0.5rem" }}>
-          <strong>Turn {currentPlayerIndex}- {players[currentPlayerIndex].name}'s Turn</strong> 
+          <strong>{players[currentPlayerIndex].name}'s Turn</strong> 
         </div>
 
         <ul style={{ listStyleType: "none", paddingLeft: 0 }} className="player-list">
