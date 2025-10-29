@@ -155,8 +155,12 @@ const App = () => {
         let updatedPlayers = players.map((p, i) => {
           if(i === currentPlayerIndex){
             return { ...p, roundBank: p.roundBank + (moneyToWin * count) };
-          }
+          } else {
+            return { ...p};
+          }//if-else
         });
+
+        setPlayers(updatedPlayers);
 
         // Check if all letters are revealed
         const revealed = currentPuzzle
@@ -241,6 +245,7 @@ const App = () => {
     }//while
 
     setCurrentPlayerIndex(ind);
+    setHasSpun(false);
     setLastSpinResult("---");
     setWheelMessage("");
   }//func
