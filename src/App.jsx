@@ -110,11 +110,7 @@ const App = () => {
   }, []); //useEffect
 
   // pick a new puzzle whenever a new round starts
-  // pick a new puzzle whenever a new round starts
   useEffect(() => {
-    if (puzzles.length > 0 && round > 0) {
-      // pick a random puzzle
-    }
     if (puzzles.length > 0 && round > 0) {
       // pick a random puzzle
       setPuzzlePicked(Math.floor(Math.random() * puzzles.length));
@@ -381,11 +377,16 @@ const App = () => {
           </div>
 
           <div id="row_guessed" className="box">
-            <GuessedLetters guessed={guessed} />
+            <GuessedLetters guessed={guessed} preguessed={preguessed} />
           </div>
         </div>
         <div id="row_wheel" className="box">
-          <Wheel round={round} setWinner={setLastSpinResult} />
+          <Wheel
+            round={round}
+            setWinner={setLastSpinResult}
+            hasSpun={hasSpun}
+            setHasSpun={setHasSpun}
+          />{" "}
         </div>
       </div>
 
