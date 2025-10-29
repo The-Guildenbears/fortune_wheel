@@ -146,15 +146,19 @@ const App = () => {
         alert(`${letter} is incorrect! Moving to next player.`);
         nextPlayer();
       } else {
+        // track number of times letter appears in puzzle 
         let count = 0;
         for(const p of puzzles[puzzlePicked].puzzle){
           if(letter === p) count++;
         }//for
 
+        const wonAmount = moneyToWin * count;
+        setWheelMessage(`${players[currentPlayerIndex].name} has won $${wonAmount}! (Added to Round Bank)`);
+
         // add consonant money to player's round money
         let updatedPlayers = players.map((p, i) => {
           if(i === currentPlayerIndex){
-            return { ...p, roundBank: p.roundBank + (moneyToWin * count) };
+            return { ...p, roundBank: p.roundBank + (wonAmount) };
           } else {
             return { ...p};
           }//if-else
@@ -224,13 +228,7 @@ const App = () => {
     // determine whether to skip player while handling spin result 
     const toSkip = handleSpinResult(players, setPlayers, currentPlayerIndex, lastSpinResult, setWheelMessage, setMoneyToWin);
 
-    // prevent double skipping due to strict mode
-    if(!hasRun.current && toSkip){
-      nextPlayer();
-      hasRun.current = true;
-    }else{
-      hasRun.current = false;
-    }//if-else
+    if(toSkip) nextPlayer();
   }, [lastSpinResult]);
 
   // ------------------ round and turn logic ------------------
@@ -338,22 +336,33 @@ const App = () => {
         </button>
       </div>
 
+
+      {/* Round debug */}
+      <h3>DEBUGGING BUTTONS</h3>
+      <p>Manually move to next player</p>
       <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
         Next Player
       </button>
+      <br />
+      <br />
 
-      {/* Round debug */}
+      <p>End Round (Add unbanked money to Total Bank, reset unbanked money to 0, and move to next round)</p>
       <button onClick={() => requestRoundMove("ROUND_ENDED")} style={{ marginRight: "0.5rem" }}>
-        End Round (Total Bank)
+        End Round
       </button>
       <br />
       <br />
-
+      
+      <p>Reset Round (Reset unbanked money to 0, does not move to next round)</p>
       <button onClick={() => requestRoundMove("ROUND_RESET")} style={{ marginRight: "0.5rem" }}>
         Reset Round
       </button>
+      <br />
+      <br />
+      
+      <p>Reset Game (Resets unbanked AND banked money to 0, reset to round 1)</p>
       <button onClick={() => requestRoundMove("TOTAL_RESET")} style={{ marginRight: "0.5rem" }}>
-        Reset Totals
+        Reset Game
       </button>
       <br />
       <br />
