@@ -3,7 +3,7 @@ import { Wheel as RouletteWheel } from "react-custom-roulette";
 import "./wheel.css";
 import CreateWheel from "./CreateWheel";
 
-const Wheel = ({ round, setWinner }) => {
+const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
   const [wheel, setWheel] = useState([]);
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(0);
@@ -26,6 +26,7 @@ const Wheel = ({ round, setWinner }) => {
   const handleStopSpinning = () => {
     setMustSpin(false);
     setWinner(wheel[prizeNumber].val);
+    setHasSpun(true);
   };
 
   //create the wheel
@@ -45,11 +46,9 @@ const Wheel = ({ round, setWinner }) => {
 
   return (<>
     <div className="wheel-container">
-      <h3>Round {round}</h3>
-
       <div className="controls">
-        <button onClick={handleSpinClick} disabled={mustSpin}>
-          {mustSpin ? "Spinning..." : "SPIN"}
+        <button onClick={handleSpinClick} disabled={mustSpin || hasSpun} style={{ marginBottom: "0.5rem", marginTop: "1rem" }}>
+          {hasSpun ? "Guess a consonant first!!!" : (mustSpin ? "Now Spinning..." : "SPIN! THE! WHEEL!!!")}
         </button>
       </div>
       {wheelData.length > 0 && (

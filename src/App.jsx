@@ -5,16 +5,17 @@ import "./App.css";
 import Player from "./components/players/Player";
 import Board from "./components/board/Board";
 import Wheel from "./components/wheel/Wheel";
+import GuessedLetters from "./components/guessedletters/GuessedLetters";
+import Keyboard from "./components/keyboard/Keyboard";
+import ModalComponent from "./components/modalcomponent/ModalComponent";
 
 // import React hooks
 import { useEffect, useState, useRef } from "react";
 
 // import functions
 import { getPuzzles } from "./services/getPuzzles";
-import GuessedLetters from "./components/guessedletters/GuessedLetters";
 import { roundMover } from "./services/roundMover";
 import { handleSpinResult } from "./services/handleSpinResult";
-import Keyboard from "./components/keyboard/Keyboard";
 import buyVowel from "./services/buyVowel";
 
 // the component
@@ -31,7 +32,8 @@ const App = () => {
   const [puzzleFragment, setPuzzleFragment] = useState("");
 
   // data hooks for guessed letters
-  const [guessed, setGuessed] = useState([]);
+  const preguessed = [",", ".", "?", "!", "&", "-", "'", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+  const [guessed, setGuessed] = useState(preguessed);
 
   // player data hooks
   const [players, setPlayers] = useState([
@@ -40,17 +42,28 @@ const App = () => {
     { id: 3, name: "Player 3", roundBank: 0, totalBank: 0, bankrupt: false },
   ]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const allBankrupt = useRef(false);
 
   // wheel data hooks
   const [lastSpinResult, setLastSpinResult] = useState("---");
   const [wheelMessage, setWheelMessage] = useState("");
+  const [hasSpun, setHasSpun] = useState(false);
+  const [moneyToWin, setMoneyToWin] = useState(0);
 
   // round data hooks
-  const [round, setRound] = useState(0);
+  const [round, setRound] = useState(1);
   
   // letter data hooks
   const vowels = ["A", "E", "I", "O", "U"];
   const [letterToBuy, setLetterToBuy] = useState("");
+
+  // final winner modal data hooks
+  const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
+  const [sortedPlayers, setSortedPlayers] = useState([]);
+
+  // modal data hooks
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState(0);
 
   // ------------------ puzzle logic ------------------
 
@@ -76,12 +89,16 @@ const App = () => {
     loadPuzzles();
   }, []);//useEffect
 
-  // for rendering purposes, pick any puzzle
+  // pick a new puzzle whenever a new round starts
   useEffect(() => {
-    if(puzzles.length > 0){
+    if (puzzles.length > 0 && round > 0) {
+      // pick a random puzzle
       setPuzzlePicked(Math.floor(Math.random() * puzzles.length));
+
+      // reset guessed letters for the new puzzle
+      setGuessed(preguessed);
     }//if
-  }, [puzzles]);
+  }, [round, puzzles]);
 
   // set up puzzle fragment to pass along to board
   useEffect(() => {
@@ -117,51 +134,145 @@ const App = () => {
 
     if(vowels.includes(letter)){
       toAddLetter = buyVowel(letter, players, setPlayers, currentPlayerIndex, guessed);
-    }
+    }//if
 
     if(toAddLetter){
-      setGuessed([...guessed, letter]);
-    }
+      // update the guessed letters 
+      const newGuessed = [...guessed, letter.toUpperCase()];
+      setGuessed(newGuessed);
+
+      const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase();
+      if(!currentPuzzle.includes(letter.toUpperCase())){
+        alert(`${letter} is incorrect! Moving to next player.`);
+        nextPlayer();
+      } else {
+        let count = 0;
+        for(const p of puzzles[puzzlePicked].puzzle){
+          if(letter === p) count++;
+        }//for
+
+        // add consonant money to player's round money
+        let updatedPlayers = players.map((p, i) => {
+          if(i === currentPlayerIndex){
+            return { ...p, roundBank: p.roundBank + (moneyToWin * count) };
+          }
+        });
+
+        // Check if all letters are revealed
+        const revealed = currentPuzzle
+          .split("")
+          .filter(ch => /[A-Z]/.test(ch))
+          .every(ch => newGuessed.includes(ch));
+
+        // move to next round, bank all round money
+        if(revealed){
+          alert(`All letters revealed! ${players[currentPlayerIndex].name} wins the round!`);
+
+          updatedPlayers = players.map((p, i) => {
+            if(i === currentPlayerIndex){
+              return { ...p, totalBank: p.totalBank + p.roundBank, roundBank: 0 };
+            } else {
+              return { ...p, roundBank: 0 };
+            }//if-else
+          });
+
+          setPlayers(updatedPlayers);
+          requestRoundMove("ROUND_ENDED");
+        }//if
+      }//if-else
+
+      // regardless of whether the guess was correct, we need to spin the wheel again afterwards  
+      setHasSpun(false);
+    }//if
   };
+
+  // ---------------- full clue logic ---------------
+
+  const onClueGuess = (guess) => {
+    const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase().trim();
+    if(guess.toUpperCase().trim() === currentPuzzle){
+      alert(`Correct! ${players[currentPlayerIndex].name} wins the round!`);
+      
+      const updatedPlayers = players.map((p, i) => {
+        if(i === currentPlayerIndex){
+          return { ...p, totalBank: p.totalBank + p.roundBank, roundBank: 0 };
+        } else {
+          return { ...p, roundBank: 0 };
+        }//if-else
+      });
+
+      setPlayers(updatedPlayers);
+      requestRoundMove("ROUND_ENDED");
+    } else {
+      alert(`Incorrect! ${players[currentPlayerIndex].name}'s turn is over.`);
+      nextPlayer();
+    }//if-else
+  };
+
 
   // ------------------ wheel logic ------------------
 
   const hasRun = useRef(false);
   useEffect(() => {
-    const toSkip = handleSpinResult(players, setPlayers, currentPlayerIndex, lastSpinResult, setWheelMessage);
+    // prevent skipping on startup
+    if(lastSpinResult === "---") return;
 
+    // determine whether to skip player while handling spin result 
+    const toSkip = handleSpinResult(players, setPlayers, currentPlayerIndex, lastSpinResult, setWheelMessage, setMoneyToWin);
+
+    // prevent double skipping due to strict mode
     if(!hasRun.current && toSkip){
       nextPlayer();
       hasRun.current = true;
     }else{
       hasRun.current = false;
-    }
+    }//if-else
   }, [lastSpinResult]);
 
   // ------------------ round and turn logic ------------------
 
   const nextPlayer = () => {
+    //get index of the next player
     let ind = (currentPlayerIndex < 2 ? currentPlayerIndex + 1 : 0);
 
-    while(players[ind].bankrupt){
+    //skip any bankrupt players
+    while(players[ind].bankrupt && !allBankrupt.current){
       ind = (ind < 2 ? ind + 1 : 0);
     }//while
 
-    setCurrentPlayerIndex(ind)
+    setCurrentPlayerIndex(ind);
     setLastSpinResult("---");
     setWheelMessage("");
   }//func
-  
-  // only difference between calling a round move in the component is the code
+
+  // only difference in how a round is moved in this component is the code string
   const requestRoundMove = (code) => {
-    roundMover(code, round, setRound, setLastSpinResult, setPlayers, setWheelMessage, setGuessed);
+    roundMover(code, round, setRound, setPlayers, setWheelMessage);
+    
+    setLastSpinResult("---");
+    setGuessed(preguessed);
   }//const
 
   // escape freezing when all players are bankrupt
   useEffect(() => {
-    const allBankrupt = players[0].bankrupt && players[1].bankrupt && players[2].bankrupt;
-    if(allBankrupt) requestRoundMove("ROUND_ENDED");
+    allBankrupt.current = players[0].bankrupt && players[1].bankrupt && players[2].bankrupt;
+    if(allBankrupt.current) requestRoundMove("ROUND_ENDED");
   }, [players]);
+
+  // code to display the winners  
+  const showFinalResults = () => {
+    // sort players by totalBank descending
+    const sorted = [...players].sort((a, b) => b.totalBank - a.totalBank);
+    setSortedPlayers(sorted);
+    setShowFinalWinnerModal(true);
+  };
+
+  // show final results after round 3 ends
+  useEffect(() => {
+    if (round > 3) {
+      showFinalResults();
+    }//if
+  }, [round]);
 
   // ------------------ the render ------------------
 
@@ -177,23 +288,26 @@ const App = () => {
       </>}
     </>: 
     <>
-      <div>Aidan, Tanna, Emma and Tarik's Wheel of Fortune</div>
+      <div>Aidan, Tannah, Emma and Tarik's Wheel of Fortune</div>
       
+      <h2>Round {round}</h2>
       <div id="row_board" className="box">
         <Board puzzleFragment={puzzleFragment} category={puzzles[puzzlePicked].category} />
       </div>
       
       <div id="row_guessed" className="box">
-        <GuessedLetters guessed={guessed}/>
+        <GuessedLetters guessed={guessed} preguessed={preguessed}/>
       </div>
       
       <div id="row_wheel" className="box">
-        <Wheel round={round} setWinner={setLastSpinResult}/>
+        <Wheel round={round} setWinner={setLastSpinResult} hasSpun={hasSpun} setHasSpun={setHasSpun}/>
+        <div style={{ marginTop: "0.75rem" }}>{wheelMessage}</div>
       </div>
 
       <Keyboard
           guessedLetters={guessed}
           setLetterToBuy={setLetterToBuy}
+          hasSpun={hasSpun}
         />
 
       {/* Player Management */}
@@ -202,17 +316,28 @@ const App = () => {
         currentPlayerIndex={currentPlayerIndex}
       />
 
+      {/* Solve Full Puzzle */}
+      <div style={{ marginBottom: "0.5rem", marginTop: "1rem" }}>
+        <input
+          type="text"
+          placeholder="Guess the Clue"
+          id="clueInput"
+          style={{ marginRight: "0.5rem" }}
+        />
+        <button onClick={() => {
+          const guess = document.getElementById("clueInput").value;
+          onClueGuess(guess);
+          document.getElementById("clueInput").value = "";
+        }}>
+          Solve Puzzle
+        </button>
+      </div>
+
       <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
         Next Player
       </button>
 
       {/* Round debug */}
-      <div style={{ marginBottom: "0.5rem" }}>
-        <strong>Last Spin Result:</strong> {lastSpinResult}
-      </div>
-      <br />
-      <br />
-
       <button onClick={() => requestRoundMove("ROUND_ENDED")} style={{ marginRight: "0.5rem" }}>
         End Round (Total Bank)
       </button>
@@ -228,7 +353,35 @@ const App = () => {
       <br />
       <br />
 
-      <div style={{ marginTop: "0.75rem" }}>{wheelMessage}</div>
+      {/* Modal to display winners for the base game */}
+      {showFinalWinnerModal ?
+        <ModalComponent>
+          <h2>🏆 Game Over! </h2>
+            <p>1st Place: {sortedPlayers[0]?.name} (${sortedPlayers[0]?.totalBank})</p>
+            <p>2nd Place: {sortedPlayers[1]?.name} (${sortedPlayers[1]?.totalBank})</p>
+            <p>3rd Place: {sortedPlayers[2]?.name} (${sortedPlayers[2]?.totalBank})</p>
+
+            {/* Bonus Round Button */}
+            <button disabled style={{ marginTop: "1rem", padding: "0.5rem 1rem", cursor: "not-allowed" }}>
+              1st Place Proceed to Bonus Round
+            </button>
+
+            {/* Close Button */}
+            <button 
+              onClick={() => {
+                //hide the modal
+                setShowFinalWinnerModal(false);
+                
+                //start new game with the same players
+                requestRoundMove("TOTAL_RESET");
+              }} 
+              className="modalcomponent-button"
+            >
+              Start a new game
+            </button>
+        </ModalComponent>
+      : <></> }
+
     </>
   );
 }
