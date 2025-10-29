@@ -47,8 +47,6 @@ const Wheel = ({ round, setWinner }) => {
   return (
     <>
       <div className="wheel-container">
-        <h3>Round {round}</h3>
-
         <div className="controls">
           <button onClick={handleSpinClick} disabled={mustSpin}>
             {mustSpin ? "Spinning..." : "SPIN"}
@@ -64,11 +62,12 @@ const Wheel = ({ round, setWinner }) => {
               onStopSpinning={handleStopSpinning}
               backgroundColors={["#3e3e3e", "#ff1100ff"]}
               fontSize={16}
+              //fontFamily="play-regular"
               outerBorderColor="#333333"
-              outerBorderWidth={1}
-              innerBorderColor="#333333"
-              innerBorderWidth={0}
-              innerRadius={5}
+              outerBorderWidth={4}
+              innerBorderColor="#efbf04"
+              innerBorderWidth={70}
+              innerRadius={0}
               radiusLineColor="#333333"
               radiusLineWidth={1}
               spinDuration={0.4}

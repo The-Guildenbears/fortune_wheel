@@ -1,0 +1,15 @@
+.guess-cont {
+  display: flex;
+  justify-content: start;
+  gap: 5px;
+  align-items: center;
+}
+
+.letter-cont {
+  font-size: 23px;
+  border: solid;
+  border: 1px;
+  border: black;
+  color: blue;
+  background-color: green;
+}

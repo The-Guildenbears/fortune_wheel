@@ -46,7 +46,7 @@ const App = () => {
   const [wheelMessage, setWheelMessage] = useState("");
 
   // round data hooks
-  const [round, setRound] = useState(0);
+  const [round, setRound] = useState(1);
 
   // letter data hooks
   const vowels = ["A", "E", "I", "O", "U"];
@@ -283,22 +283,27 @@ const App = () => {
       )}
     </>
   ) : (
-    <>
-      <div>Aidan, Tannah, Emma and Tarik's Wheel of Fortune</div>
-
-      <div id="row_board" className="box">
-        <Board
-          puzzleFragment={puzzleFragment}
-          category={puzzles[puzzlePicked].category}
-        />
+    <div className="main_container">
+      <div className="main_title play-bold">
+        The Guildenbear's Wheel of Fortune
       </div>
+      <div className="play-regular">Round {round}</div>
+      <div className="play-board">
+        <div>
+          <div id="row_board" className="box">
+            <Board
+              puzzleFragment={puzzleFragment}
+              category={puzzles[puzzlePicked].category}
+            />
+          </div>
 
-      <div id="row_guessed" className="box">
-        <GuessedLetters guessed={guessed} />
-      </div>
-
-      <div id="row_wheel" className="box">
-        <Wheel round={round} setWinner={setLastSpinResult} />
+          <div id="row_guessed" className="box">
+            <GuessedLetters guessed={guessed} />
+          </div>
+        </div>
+        <div id="row_wheel" className="box">
+          <Wheel round={round} setWinner={setLastSpinResult} />
+        </div>
       </div>
 
       <Keyboard guessedLetters={guessed} setLetterToBuy={setLetterToBuy} />
@@ -434,7 +439,7 @@ const App = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
