@@ -1,4 +1,5 @@
 const PlayerCard = ({player, isTurn}) => {
+    // change style based both on whether it is the player's turn and their bankruptcy
     const strClass = player.bankrupt ? "player-card-bankrupt" : (isTurn ? "player-card-isturn" : "player-card");
 
     return(<>

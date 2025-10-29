@@ -8,10 +8,10 @@ const Keyboard = ({ guessedLetters, setLetterToBuy, hasSpun }) => {
   // "guessedLetters" is an array of letters guessed so far
   // "setLetterToBuy" is a useState setter
 
-  // Makes a list of letters
+  // create an array of letters
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-  // breakpoints for rows
+  // breakpoints for rows; subject to change with UI
   const rowIndices = [10, 19, 26];
 
   // vowels are not restricted by the wheel
@@ -27,6 +27,7 @@ const Keyboard = ({ guessedLetters, setLetterToBuy, hasSpun }) => {
       <h2>KEYBOARD</h2>
 
       {!hasSpun ? <>
+        {/* prompt the player to spin the wheel first */}
         <strong>To guess a consonant, spin the wheel first!</strong>
         <br/>
         <br/>
@@ -39,6 +40,7 @@ const Keyboard = ({ guessedLetters, setLetterToBuy, hasSpun }) => {
             <button
               onClick={() => handleClick(ch)}
               // disable button if the letter was already guessed
+              // disable button also when it's a consonant and the wheel hasn't spun yet
               disabled={guessedLetters.includes(ch) || (!hasSpun && !vowels.includes(ch))}
               style={{
                 marginRight: "0.5rem",

@@ -1,13 +1,11 @@
+import { updatePlayerByIndex } from "./updatePlayerByIndex";
+
 export const handleSpinResult = (players, setPlayers, currentPlayerIndex, lastSpinResult, setMessage, setMoneyToWin) => {
     // keep track of all values for updating a player
     let message = "Message goes here";
     let roundMoney = players[currentPlayerIndex].roundBank;
     let toBankrupt = false;
     let toSkip = false;
-
-    const updatePlayerByIndex = (index, updater) => {
-        setPlayers((prev) => prev.map((p, i) => (i === index ? updater(p) : p)));
-    }//func
 
     if(typeof lastSpinResult === "number"){
       // landed on a cash value
@@ -17,6 +15,7 @@ export const handleSpinResult = (players, setPlayers, currentPlayerIndex, lastSp
     }else{
       // landed on either "BANKRUPT" or "LOSE A TURN"
       if(lastSpinResult === "BANKRUPT"){
+        // remove all round money and flag player as bankrupt
         roundMoney = 0;
         toBankrupt = true;
         message = `${players[currentPlayerIndex].name} landed on BANKRUPT and loses all their money from this round!`;
@@ -29,9 +28,9 @@ export const handleSpinResult = (players, setPlayers, currentPlayerIndex, lastSp
     }//if-else
 
     // update player info as needed
-    updatePlayerByIndex(currentPlayerIndex, (p) => ({ ...p, roundBank: roundMoney, bankrupt: toBankrupt}));
+    updatePlayerByIndex(currentPlayerIndex, setPlayers, (p) => ({ ...p, roundBank: roundMoney, bankrupt: toBankrupt}), false);
     setMessage(message);
 
     // skip player as needed
     return (toSkip) ? true : false;
-  }//func
+  }//const func

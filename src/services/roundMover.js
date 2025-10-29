@@ -23,7 +23,7 @@ export const roundMover = (code, round, setRound, setPlayers, setMessage) => {
         break;
     }//switch
 
-    // update players, message, spin result, and the round number
+    // update players, message, and the round number
     setPlayers((prev) =>
       prev.map((p) => ({
         ...p,
