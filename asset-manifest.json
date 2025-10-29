@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/The-Guildenbears/fortune_wheel/static/css/main.48d20fbf.css",
+    "main.js": "/The-Guildenbears/fortune_wheel/static/js/main.a1d8e787.js",
+    "index.html": "/The-Guildenbears/fortune_wheel/index.html",
+    "main.48d20fbf.css.map": "/The-Guildenbears/fortune_wheel/static/css/main.48d20fbf.css.map",
+    "main.a1d8e787.js.map": "/The-Guildenbears/fortune_wheel/static/js/main.a1d8e787.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.48d20fbf.css",
+    "static/js/main.a1d8e787.js"
+  ]
+}
