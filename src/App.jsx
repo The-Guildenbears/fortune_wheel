@@ -61,10 +61,6 @@ const App = () => {
   const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
   const [sortedPlayers, setSortedPlayers] = useState([]);
 
-  // modal data hooks
-  const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState(0);
-
   // ------------------ puzzle logic ------------------
 
   // get the puzzles only once
@@ -220,7 +216,6 @@ const App = () => {
 
   // ------------------ wheel logic ------------------
 
-  const hasRun = useRef(false);
   useEffect(() => {
     // prevent skipping on startup
     if(lastSpinResult === "---") return;
