@@ -5,7 +5,7 @@ const buyVowel = (vowel, players, setPlayers, currentPlayerIndex, guessed) => {
     }//if
 
     const confirmed = window.confirm(
-      `${players[currentPlayerIndex].name} wants to buy vowel ${vowel} for $500?`
+      `${players[currentPlayerIndex].name}, do you want to buy '${vowel}' for $500?`
     );
     if (!confirmed) return;
 

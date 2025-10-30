@@ -8,7 +8,7 @@ export const WHEEL_CONFIG = {
     R3: 3500,
     R: 5000,
   },
-  TOP_HEX: "#FFD700",
+  TOP_HEX: "#ffe32dff",
   //   Bankrupt
   BR: 2,
   BR_VAL: "BANKRUPT",

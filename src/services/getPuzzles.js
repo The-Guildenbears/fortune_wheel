@@ -15,10 +15,10 @@ export const getPuzzles = async() => {
       // wait for response
       const result = await response.json();
 
-      // randomly choose six puzzles for the game
+      // randomly choose twelve puzzles for the game
       const puzzles = [];
       const puzzleSet = new Set();
-      while(puzzleSet.size < 6){
+      while(puzzleSet.size < 12){
         // pick a random index
         const num = Math.floor(Math.random() * 50);
 

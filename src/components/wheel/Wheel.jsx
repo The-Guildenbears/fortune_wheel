@@ -75,7 +75,7 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
               //fontFamily="play-regular"
               outerBorderColor="#333333"
               outerBorderWidth={4}
-              innerBorderColor="#efbf04"
+              innerBorderColor="#3CB371"
               innerBorderWidth={70}
               innerRadius={0}
               radiusLineColor="#333333"

@@ -61,7 +61,6 @@ const App = () => {
     { id: 3, name: "Player 3", roundBank: 0, totalBank: 0, bankrupt: false },
   ]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const allBankrupt = useRef(false);
 
   // wheel data hooks
   const [lastSpinResult, setLastSpinResult] = useState("---");
@@ -291,11 +290,15 @@ const App = () => {
     // get index of the next player
     let ind = currentPlayerIndex < 2 ? currentPlayerIndex + 1 : 0;
 
-    // skip any bankrupt players
-    // escape endless loop if all players are bankrupt
-    while (players[ind].bankrupt && !allBankrupt.current) {
-      ind = ind < 2 ? ind + 1 : 0;
-    } //while
+    // if player is bankrupt, revert bankruptcy
+    if(players[ind].bankrupt){
+      updatePlayerByIndex(
+        ind,
+        setPlayers,
+        (p) => ({ ...p, bankrupt: false }),
+        false
+      );
+    }//if
 
     // set player index and enable wheel to be spun for consonant guessing
     setCurrentPlayerIndex(ind);
@@ -316,16 +319,6 @@ const App = () => {
     setWheelMessage("");
     setGuessed(preguessed);
   }; //const
-
-  // escape freezing when all players are bankrupt
-  useEffect(() => {
-    // update flag for when all players are bankrupt
-    allBankrupt.current =
-      players[0].bankrupt && players[1].bankrupt && players[2].bankrupt;
-
-    // move to next round as necessary
-    if (allBankrupt.current) requestRoundMove("ROUND_ENDED");
-  }, [players]);
 
   // code to display the winners
   const showFinalResults = () => {
@@ -380,13 +373,14 @@ const App = () => {
             <GuessedLetters guessed={guessed} preguessed={preguessed} />
           </div>
         </div>
-        <div id="row_wheel" className="box">
+        <div id="row_wheel" className="box" style={{textAlign: "center"}}>
           <Wheel
             round={round}
             setWinner={setLastSpinResult}
             hasSpun={hasSpun}
             setHasSpun={setHasSpun}
-          />{" "}
+          />
+          <p>{wheelMessage}</p>
         </div>
       </div>
 
