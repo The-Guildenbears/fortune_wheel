@@ -1,7 +1,7 @@
 export const getPuzzles = async() => {
     // url base for the Wheel of Fortune Database ("wofdb") API call
     // maxLetters property is subject to change in case of cutoff
-    const maxLetters = 16;
+    const maxLetters = 24;
     const url_base = `https://www.wofdb.com/api/beta/puzzle?maxLetters=${maxLetters}`;
 
     try {
@@ -18,7 +18,7 @@ export const getPuzzles = async() => {
       // randomly choose twelve puzzles for the game
       const puzzles = [];
       const puzzleSet = new Set();
-      while(puzzleSet.size < 12){
+      while(puzzleSet.size < 10){
         // pick a random index
         const num = Math.floor(Math.random() * 50);
 
@@ -31,7 +31,7 @@ export const getPuzzles = async() => {
             puzzles.push({
                 category: result.data[num].category.name.toUpperCase(),
                 puzzle: result.data[num].puzzle.toUpperCase()
-            })
+            });
         }//if
       }//while
 

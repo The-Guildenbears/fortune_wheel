@@ -31,8 +31,8 @@ const Board = ({puzzleFragment, category}) => {
       if(square){
         square.style.backgroundColor = "mediumseagreen";
         square.innerHTML = "";
-      }
-    }
+      }//if
+    }//for
 
     //flag the squares without spaces
     for(let i = 0; i < puzzleFragment.length; i++){

@@ -38,9 +38,9 @@ const App = () => {
 
   // player data hooks
   const [players, setPlayers] = useState([
-    { id: 1, name: "Player 1", roundBank: 0, totalBank: 0, bankrupt: false },
-    { id: 2, name: "Player 2", roundBank: 0, totalBank: 0, bankrupt: false },
-    { id: 3, name: "Player 3", roundBank: 0, totalBank: 0, bankrupt: false },
+    { id: 1, name: "Player 1", roundBank: 500, totalBank: 0, bankrupt: false },
+    { id: 2, name: "Player 2", roundBank: 500, totalBank: 0, bankrupt: false },
+    { id: 3, name: "Player 3", roundBank: 500, totalBank: 0, bankrupt: false },
   ]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
 
@@ -63,29 +63,29 @@ const App = () => {
 
   // ------------------ puzzle logic ------------------
 
+  const loadPuzzles = async () => {
+    try {
+      // attempt to get a list of puzzles
+      const data = await getPuzzles();
+      // uncomment line below for debugging purposes
+      //console.log(data);
+
+      // add to list of puzzles to choose from
+      setPuzzles(data);
+    } catch (error) {
+      // something went wrong
+      console.error("Failed to load puzzles:", error);
+    } finally {
+      // finish loading anyways
+      setLoading(false);
+    }//try-catch-finally
+  };
+
   // get the puzzles only once
   useEffect(() => {
     // skip if data already fetched; otherwise flag fetching
     if (!fetching.current) return;
     fetching.current = false;
-
-    const loadPuzzles = async () => {
-      try {
-        // attempt to get a list of puzzles
-        const data = await getPuzzles();
-        // uncomment line below for debugging purposes
-        //console.log(data);
-
-        // add to list of puzzles to choose from
-        setPuzzles(data);
-      } catch (error) {
-        // something went wrong
-        console.error("Failed to load puzzles:", error);
-      } finally {
-        // finish loading anyways
-        setLoading(false);
-      } //try-catch-finally
-    };
 
     loadPuzzles();
   }, []); //useEffect
@@ -93,11 +93,14 @@ const App = () => {
   // pick a new puzzle whenever a new round starts
   useEffect(() => {
     if (puzzles.length > 0 && round > 0) {
-      // pick a random puzzle
-      setPuzzlePicked(Math.floor(Math.random() * puzzles.length));
+      // pick a new puzzle
+      setPuzzlePicked(round);
 
       // reset guessed letters for the new puzzle
       setGuessed(preguessed);
+
+      // lock consonants
+      setHasSpun(false);
     } //if
   }, [round, puzzles]);
 
@@ -236,7 +239,7 @@ const App = () => {
       updatePlayerByIndex(
         currentPlayerIndex,
         setPlayers,
-        (p) => ({ ...p, totalBank: p.totalBank + p.roundBank, roundBank: 0 }),
+        (p) => ({ ...p, totalBank: p.totalBank + p.roundBank, roundBank: 500 }),
         true
       );
 
@@ -319,6 +322,14 @@ const App = () => {
       showFinalResults();
     } //if
   }, [round]);
+
+  const roundResetter = () => {
+    //start new game with the same players
+    requestRoundMove("TOTAL_RESET");
+
+    //get new puzzles
+    loadPuzzles();
+  }//const
 
   // ------------------ the render ------------------
 
@@ -436,7 +447,7 @@ const App = () => {
         Reset Game (Resets unbanked AND banked money to 0, reset to round 1)
       </p>
       <button
-        onClick={() => requestRoundMove("TOTAL_RESET")}
+        onClick={() => roundResetter()}
         style={{ marginRight: "0.5rem" }}
       >
         Reset Game
@@ -470,14 +481,13 @@ const App = () => {
             1st Place Proceed to Bonus Round
           </button>
 
-          {/* Close Button */}
+          {/* New Game Button */}
           <button
             onClick={() => {
               //hide the modal
               setShowFinalWinnerModal(false);
 
-              //start new game with the same players
-              requestRoundMove("TOTAL_RESET");
+              roundResetter();
             }}
             className="modalcomponent-button"
           >

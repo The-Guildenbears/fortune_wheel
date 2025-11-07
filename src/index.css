@@ -61,21 +61,40 @@
   gap: 2em;
 }
 
+#player1 {
+  background-color: crimson;
+  color: rgb(255, 245, 245);
+}
+
+#player2 {
+  background-color: blue;
+  color: rgb(245, 245, 255);
+}
+
+#player3 {
+  background-color: gold;
+  color: rgb(255, 250, 245);
+}
+
 .player-card {
-  background-color: darkblue;
   border-radius: 4px;
-  color: lightblue;
   padding: 1em;
+  
+  text-shadow:
+   -1px -1px 0 #000,  
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+     1px 1px 0 #000;
 
   width: 8em;
   height: 5em;
 }
 
-.player-card-isturn {
-  background-color: blue;
+.player-card-inactive {
   border-radius: 4px;
-  color: white;
   padding: 1em;
+
+  filter: brightness(80%) saturate(110%);
 
   width: 8em;
   height: 5em;
@@ -121,6 +140,7 @@
   align-items: center;
   gap: 40px;
 }
+
 /*--------- ModalComponent styling ---------*/
 .modalcomponent-background-div {
   position: fixed;

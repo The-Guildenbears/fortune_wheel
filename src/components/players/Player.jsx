@@ -14,7 +14,7 @@ const Player = ({ players, currentPlayerIndex}) => {
         <ul style={{ listStyleType: "none", paddingLeft: 0 }} className="player-list">
           {players.map((p, i) => (
             <li key={i}>
-              <PlayerCard player={p} isTurn={i === currentPlayerIndex}/>
+              <PlayerCard player={p} index={i+1} isTurn={i === currentPlayerIndex}/>
             </li>
           ))}
         </ul>
