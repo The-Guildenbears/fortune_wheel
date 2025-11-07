@@ -33,25 +33,7 @@ const App = () => {
   const [puzzleFragment, setPuzzleFragment] = useState("");
 
   // data hooks for guessed letters
-  const preguessed = [
-    ",",
-    ".",
-    "?",
-    "!",
-    "&",
-    "-",
-    "'",
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-  ];
+  const preguessed = [ ",", ".", "?", "!", "&", "-", "'", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" ];
   const [guessed, setGuessed] = useState(preguessed);
 
   // player data hooks
@@ -183,26 +165,29 @@ const App = () => {
         alert(`${letter} is incorrect! Moving to next player.`);
         nextPlayer();
       } else {
-        // track number of times letter appears in puzzle
-        let count = 0;
-        for (const p of puzzles[puzzlePicked].puzzle) {
-          if (letter === p) count++;
-        } //for
+        // earn money from guessing a consonant correctly
+        if(!vowels.includes(letter)){
+          // track number of times letter appears in puzzle
+          let count = 0;
+          for (const p of puzzles[puzzlePicked].puzzle) {
+            if (letter === p) count++;
+          } //for
 
-        // calculate money won from guess; add it to player's round bank
-        const wonAmount = moneyToWin * count;
-        updatePlayerByIndex(
-          currentPlayerIndex,
-          setPlayers,
-          (p) => ({ ...p, roundBank: p.roundBank + wonAmount }),
-          false
-        );
+          // calculate money won from guess; add it to player's round bank
+          const wonAmount = moneyToWin * count;
+          updatePlayerByIndex(
+            currentPlayerIndex,
+            setPlayers,
+            (p) => ({ ...p, roundBank: p.roundBank + wonAmount }),
+            false
+          );
 
-        // declare the guess correct
-        setWheelMessage(
-          `${players[currentPlayerIndex].name} has won $${wonAmount}! (Added to Round Bank)`
-        );
-
+          // declare the guess correct
+          setWheelMessage(
+            `${players[currentPlayerIndex].name} has won $${wonAmount}! (Added to Round Bank)`
+          );
+        }//if
+        
         // check if all letters are revealed using a regex
         const revealed = currentPuzzle
           .split("")
