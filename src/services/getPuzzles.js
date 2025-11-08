@@ -1,7 +1,7 @@
 export const getPuzzles = async() => {
     // url base for the Wheel of Fortune Database ("wofdb") API call
     // maxLetters property is subject to change in case of cutoff
-    const maxLetters = 24;
+    const maxLetters = 36;
     const url_base = `https://www.wofdb.com/api/beta/puzzle?maxLetters=${maxLetters}`;
 
     try {
