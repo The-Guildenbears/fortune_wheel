@@ -52,6 +52,9 @@ const App = () => {
 
   // round data hooks
   const [round, setRound] = useState(1);
+  const [showBonusModal, setShowBonusModal] = useState(false);
+  const bonusRoundNumber = 6;
+  const bonusCategories = ["phrase", "thing", "living-thing|living-things", "person|people", "event", "food-and-drink", "fun-and-games", "around-the-house", "same-letter|same-name", "what-are-you-doing|what-are-you-wearing", "before-and-after", "character|fictional-character", "on-the-map"].sort();
 
   // letter data hooks
   const vowels = ["A", "E", "I", "O", "U"];
@@ -63,10 +66,10 @@ const App = () => {
 
   // ------------------ puzzle logic ------------------
 
-  const loadPuzzles = async () => {
+  const loadPuzzles = async (cat = "") => {
     try {
       // attempt to get a list of puzzles
-      const data = await getPuzzles();
+      const data = await getPuzzles(cat);
       // uncomment line below for debugging purposes
       //console.log(data);
 
@@ -94,7 +97,8 @@ const App = () => {
   useEffect(() => {
     if (puzzles.length > 0 && round > 0) {
       // pick a new puzzle
-      setPuzzlePicked(round);
+      // check whether it's the bonus round
+      setPuzzlePicked((round !== bonusRoundNumber) ? round : 0);
 
       // reset guessed letters for the new puzzle
       setGuessed(preguessed);
@@ -300,6 +304,7 @@ const App = () => {
 
   // only difference in how a round is moved in this component is the code string
   const requestRoundMove = (code) => {
+    //move the round here
     roundMover(code, round, setRound, setPlayers, setWheelMessage);
 
     // clear spin result, spin message and reset guessed array to default
@@ -324,11 +329,12 @@ const App = () => {
   }, [round]);
 
   const roundResetter = () => {
+    //get new puzzles
+    setLoading(true);
+    loadPuzzles();
+
     //start new game with the same players
     requestRoundMove("TOTAL_RESET");
-
-    //get new puzzles
-    loadPuzzles();
   }//const
 
   // ------------------ the render ------------------
@@ -410,50 +416,44 @@ const App = () => {
       </div>
 
       {/* Round debug */}
-      <h3>DEBUGGING BUTTONS</h3>
-      <p>Manually move to next available player</p>
-      <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
-        Next Player
-      </button>
-      <br />
-      <br />
+      <div>
+        <h3>DEBUGGING BUTTONS</h3>
+        <p>Manually move to next available player</p>
+        <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
+          Next Player
+        </button>
 
-      <p>
-        End Round (Add unbanked money to Total Bank, reset unbanked money to 0,
-        and move to next round)
-      </p>
-      <button
-        onClick={() => requestRoundMove("ROUND_ENDED")}
-        style={{ marginRight: "0.5rem" }}
-      >
-        End Round
-      </button>
-      <br />
-      <br />
+        <p>
+          End Round (Add unbanked money to Total Bank, reset unbanked money to 0,
+          and move to next round)
+        </p>
+        <button
+          onClick={() => requestRoundMove("ROUND_ENDED")}
+          style={{ marginRight: "0.5rem" }}
+          disabled={round >= bonusRoundNumber ? true : false}
+        >
+          {round >= bonusRoundNumber ? "Cannot Skip (Final Round)" : "End Round"}
+        </button>
+        <p>
+          Reset Round (Reset unbanked money to 0, does not move to next round)
+        </p>
+        <button
+          onClick={() => requestRoundMove("ROUND_RESET")}
+          style={{ marginRight: "0.5rem" }}
+        >
+          Reset Round
+        </button>
 
-      <p>
-        Reset Round (Reset unbanked money to 0, does not move to next round)
-      </p>
-      <button
-        onClick={() => requestRoundMove("ROUND_RESET")}
-        style={{ marginRight: "0.5rem" }}
-      >
-        Reset Round
-      </button>
-      <br />
-      <br />
-
-      <p>
-        Reset Game (Resets unbanked AND banked money to 0, reset to round 1)
-      </p>
-      <button
-        onClick={() => roundResetter()}
-        style={{ marginRight: "0.5rem" }}
-      >
-        Reset Game
-      </button>
-      <br />
-      <br />
+        <p>
+          Reset Game (Resets unbanked AND banked money to 0, reset to round 1)
+        </p>
+        <button
+          onClick={() => roundResetter()}
+          style={{ marginRight: "0.5rem" }}
+        >
+          Reset Game
+        </button>
+      </div>
 
       {/* Modal to display winners for the base game */}
       {showFinalWinnerModal ? (
@@ -471,32 +471,77 @@ const App = () => {
 
           {/* Bonus Round Button */}
           <button
-            disabled
-            style={{
-              marginTop: "1rem",
-              padding: "0.5rem 1rem",
-              cursor: "not-allowed",
+            className="modalcomponent-button"
+            onClick={() => {
+              setShowFinalWinnerModal(false);
+              setShowBonusModal(true);
             }}
           >
-            1st Place Proceed to Bonus Round
+            Go to the Bonus Round!
           </button>
 
           {/* New Game Button */}
           <button
+            className="modalcomponent-button"
             onClick={() => {
               //hide the modal
               setShowFinalWinnerModal(false);
 
+              //start a new game
               roundResetter();
             }}
-            className="modalcomponent-button"
           >
-            Start a new game
+            Start a New Game!
           </button>
         </ModalComponent>
       ) : (
         <></>
       )}
+
+      {/* Modal to select bonus round category */}
+      {showBonusModal ? (
+        <ModalComponent>
+          <h2>Bonus Round</h2>
+          <p>
+            Please select a category to guess from.
+          </p>
+
+          <ul style={{
+            columns: "2",
+            listStyle: "none",
+            textAlign: "center",
+            alignItems: "center",
+            padding: "0"
+          }}>
+            {bonusCategories.map((category, i) => {
+              return <li key={i}>
+                <button
+                  className="modalcomponent-button"
+
+                  style={{
+                    width: "10em",
+                    marginTop: "4px",
+                    marginBottom: "4px"
+                  }}
+
+                  onClick={() => {
+                    //hide the modal
+                    setShowBonusModal(false);
+
+                    //set bonus puzzle
+                    loadPuzzles(category);
+                  }}
+                >
+                  {category.split("|")[0].replaceAll("-", " ").toLocaleUpperCase()}
+                </button>
+              </li>
+            })}
+          </ul>
+        </ModalComponent>
+      ) : (
+        <></>
+      )}
+    {/* End of Container */}
     </div>
   );
 };
