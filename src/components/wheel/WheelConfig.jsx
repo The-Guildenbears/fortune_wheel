@@ -17,4 +17,7 @@ export const WHEEL_CONFIG = {
   LT: 1,
   LT_VAL: "LOSE TURN",
   LT_HEX: "#FFFFFF",
+  //   Mystery wedge
+  MY_VAL: "MYSTERY",
+  MY_HEX: "#ccff00",
 };
