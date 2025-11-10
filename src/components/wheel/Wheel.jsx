@@ -30,15 +30,25 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
   };
 
   //create the wheel
-  const wheelData = wheel.map((segment) => ({
-    option:
-      typeof segment.val === "number"
+  const wheelData = wheel.map((segment) => {
+    const isNumber = typeof segment.val === "number";
+
+    return {
+      option: isNumber
         ? `$${String(segment.val).split("").join("\n")}`
         : segment.val,
-    style: {
-      backgroundColor: segment.col,
-    },
-  }));
+      style: {
+        backgroundColor: segment.col,
+      },
+      image: {
+        uri: `./${segment.val}_transparent.png`,
+        offsetX: 0,
+        offsetY: isNumber ? 120 : 130,
+        sizeMultiplier: isNumber ? 1.2 : 1.4,
+        landscape: false,
+      },
+    };
+  });
 
   //set color for the wedge text
   const textColors = wheel.map((segment) =>
@@ -63,7 +73,10 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
         </div>
 
         {wheelData.length > 0 && (
-          <div className="wheel-wrapper">
+          <div
+            className="wheel-wrapper"
+            style={{ transform: "scale(1)", transformOrigin: "center" }}
+          >
             <RouletteWheel
               mustStartSpinning={mustSpin}
               prizeNumber={prizeNumber}
@@ -72,10 +85,9 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
               onStopSpinning={handleStopSpinning}
               backgroundColors={["#3e3e3e", "#ff1100ff"]}
               fontSize={16}
-              //fontFamily="play-regular"
               outerBorderColor="#333333"
               outerBorderWidth={4}
-              innerBorderColor="#efbf04"
+              innerBorderColor="#3CB371"
               innerBorderWidth={70}
               innerRadius={0}
               radiusLineColor="#333333"
@@ -83,6 +95,8 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
               spinDuration={0.4}
               perpendicularText={false}
               textDistance={60}
+              // height={500}
+              // width={500}
             />
           </div>
         )}
