@@ -23,7 +23,7 @@ import { updatePlayerByIndex } from "./services/updatePlayerByIndex";
 const App = () => {
   // --------- data hooks ---------
 
-  // Startup data hooks
+  // startup data hooks
   const [puzzles, setPuzzles] = useState([]);
   const [loading, setLoading] = useState(true);
   const fetching = useRef(true);
