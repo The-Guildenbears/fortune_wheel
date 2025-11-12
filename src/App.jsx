@@ -11,6 +11,7 @@ import Wheel from "./components/wheel/Wheel";
 import GuessedLetters from "./components/guessedletters/GuessedLetters";
 import Keyboard from "./components/keyboard/Keyboard";
 import ModalComponent from "./components/modalcomponent/ModalComponent";
+import BonusMain from "./components/bonus_round/BonusMain";
 
 // import functions
 import { getPuzzles } from "./services/getPuzzles";
@@ -126,6 +127,7 @@ const App = () => {
     if (puzzles.length > 0) {
       // get copy of puzzle string
       let str = puzzles[puzzlePicked].puzzle;
+      alert(str);
 
       // build the fragmentary string to pass to the board
       let res = "";
@@ -464,6 +466,7 @@ const App = () => {
       </button>
       <br />
       <br />
+      <BonusMain />
 
       {/* Modal to display winners for the base game */}
       {showFinalWinnerModal ? (
