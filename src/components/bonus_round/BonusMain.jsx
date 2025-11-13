@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Board from "../board/Board";
 import Keyboard from "../keyboard/Keyboard";
+import Clock from "./Clock";
 
 const PUNCT_OR_DIGIT = [
   ",",
@@ -29,13 +30,13 @@ export default function BonusMain({
   category = "BONUS",
 }) {
   // Normalize puzzle to uppercase
-  const PUZZLE = useMemo(
-    () => (puzzleText || "Hello world").toUpperCase(),
-    [puzzleText]
+  const [PUZZLE, setPUZZLE] = useState(
+    (puzzleText || "Hello world").toUpperCase()
   );
 
+  const [loading, setLoading] = useState(true);
   // Already-visible letters for Bonus: punctuation/digits + RSTLNE
-  const preguessed = useMemo(() => [...PUNCT_OR_DIGIT, ...GIVEN], []);
+  const [preguessed] = useState([...PUNCT_OR_DIGIT, ...GIVEN]);
   const [guessed, setGuessed] = useState(preguessed);
 
   // Pending picks (not revealed until "Reveal Picks")
@@ -60,7 +61,12 @@ export default function BonusMain({
       }
     }
     setPuzzleFragment(res);
+    setLoading(false);
   }, [PUZZLE, guessed]);
+
+  // useEffect(() => {
+  //   alert(`Puzzle frag: ${puzzleFragment}`);
+  // }, [puzzleFragment]);
 
   // Handle selections coming from Keyboard
   useEffect(() => {
@@ -107,65 +113,87 @@ export default function BonusMain({
 
   return (
     <div style={{ marginTop: "2rem" }}>
-      <h2 className="play-bold" style={{ marginBottom: "0.5rem" }}>
-        Bonus Round
-      </h2>
-      <p className="play-regular" style={{ marginBottom: "1rem" }}>
-        Given letters: <strong>R, S, T, L, N, E</strong>. Pick exactly{" "}
-        <strong>3 consonants</strong> and <strong>1 vowel</strong>, then click
-        “Reveal Picks”.
-      </p>
-
-      <div style={{ marginBottom: "1rem" }}>
-        <Board puzzleFragment={puzzleFragment} category={category} />
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "1rem",
-          flexWrap: "wrap",
-          alignItems: "center",
-          marginBottom: "0.5rem",
-        }}
-      >
-        <div>
-          <strong>Chosen consonants (3):</strong>{" "}
-          {pickedConsonants.length ? pickedConsonants.join(", ") : "—"}
-        </div>
-        <div>
-          <strong>Chosen vowel (1):</strong> {pickedVowel || "—"}
-        </div>
-        <button
-          onClick={onClear}
-          disabled={!pickedConsonants.length && !pickedVowel}
+      {loading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "200px",
+            fontSize: "1.5rem",
+            fontWeight: "bold",
+          }}
         >
-          Clear Picks
-        </button>
-        <button onClick={onStartOver}>Start Over</button>
-      </div>
+          Loading…
+        </div>
+      ) : (
+        <>
+          <h2 className="play-bold" style={{ marginBottom: "0.5rem" }}>
+            Bonus Round
+          </h2>
+          <p className="play-regular" style={{ marginBottom: "1rem" }}>
+            Given letters: <strong>R, S, T, L, N, E</strong>. Pick exactly{" "}
+            <strong>3 consonants</strong> and <strong>1 vowel</strong>, then
+            click “Reveal Picks”.
+          </p>
 
-      <Keyboard
-        guessedLetters={guessed}
-        setLetterToBuy={setLetterToBuy}
-        hasSpun={hasSpun}
-      />
+          <div style={{ marginBottom: "1rem", display: "flex" }}>
+            <Board
+              puzzleFragment={puzzleFragment}
+              category={category}
+              idPrefix="bonus"
+            />
+            <Clock />
+          </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        <button onClick={onReveal} disabled={!canReveal}>
-          Reveal Picks
-        </button>
-        {!canReveal ? (
-          <span style={{ fontSize: 14, color: "#666" }}>
-            Need {3 - pickedConsonants.length} consonant(s) and{" "}
-            {pickedVowel ? 0 : 1} vowel.
-          </span>
-        ) : (
-          <span style={{ fontSize: 14, color: "#2e7d32" }}>
-            Ready to reveal.
-          </span>
-        )}
-      </div>
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+              flexWrap: "wrap",
+              alignItems: "center",
+              marginBottom: "0.5rem",
+            }}
+          >
+            <div>
+              <strong>Chosen consonants (3):</strong>{" "}
+              {pickedConsonants.length ? pickedConsonants.join(", ") : "—"}
+            </div>
+            <div>
+              <strong>Chosen vowel (1):</strong> {pickedVowel || "—"}
+            </div>
+            <button
+              onClick={onClear}
+              disabled={!pickedConsonants.length && !pickedVowel}
+            >
+              Clear Picks
+            </button>
+            <button onClick={onStartOver}>Start Over</button>
+          </div>
+
+          <Keyboard
+            guessedLetters={guessed}
+            setLetterToBuy={setLetterToBuy}
+            hasSpun={hasSpun}
+          />
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <button onClick={onReveal} disabled={!canReveal}>
+              Reveal Picks
+            </button>
+            {!canReveal ? (
+              <span style={{ fontSize: 14, color: "#666" }}>
+                Need {3 - pickedConsonants.length} consonant(s) and{" "}
+                {pickedVowel ? 0 : 1} vowel.
+              </span>
+            ) : (
+              <span style={{ fontSize: 14, color: "#2e7d32" }}>
+                Ready to reveal.
+              </span>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
