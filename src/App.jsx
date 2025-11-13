@@ -29,6 +29,9 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const fetching = useRef(true);
 
+  // Bonus Round toggle variable
+  const [bonusRound, setBonusRound] = useState(false);
+
   // puzzle data hooks
   const [puzzlePicked, setPuzzlePicked] = useState(0);
   const [puzzleFragment, setPuzzleFragment] = useState("");
@@ -127,7 +130,7 @@ const App = () => {
     if (puzzles.length > 0) {
       // get copy of puzzle string
       let str = puzzles[puzzlePicked].puzzle;
-      alert(str);
+      // alert(str);
 
       // build the fragmentary string to pass to the board
       let res = "";
@@ -466,7 +469,20 @@ const App = () => {
       </button>
       <br />
       <br />
-      <BonusMain />
+
+      <p>Toggle Bonus Round (show/hide Bonus component)</p>
+      <button
+        onClick={() => setBonusRound((b) => !b)}
+        style={{ marginRight: "0.5rem" }}
+      >
+        {bonusRound ? "Hide Bonus Round" : "Show Bonus Round"}
+      </button>
+
+      {bonusRound && (
+        <div style={{ marginTop: "1rem" }}>
+          <BonusMain puzzleText="something that's nice" category="test" />
+        </div>
+      )}
 
       {/* Modal to display winners for the base game */}
       {showFinalWinnerModal ? (
