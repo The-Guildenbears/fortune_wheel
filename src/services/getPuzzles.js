@@ -21,14 +21,14 @@ export const getPuzzles = async(category = "") => {
       // wait for response
       const result = await response.json();
 
-      // randomly choose twelve puzzles for the game
+      // randomly choose puzzles for the game
       const puzzles = [];
       const puzzleSet = new Set();
-      const sizeCap = (category === "") ? 10 : 6;
+      const sizeCap = 10;
 
       while(puzzleSet.size < sizeCap){
         // pick a random index
-        const num = Math.floor(Math.random() * 50);
+        const num = Math.floor(Math.random() * 30);
 
         // check if puzzle was already chosen or if puzzle exceeds max length
         if(!puzzleSet.has(num) && result.data[num].puzzle.length <= maxLetters){

@@ -10,7 +10,6 @@ import Board from "./components/board/Board";
 import Wheel from "./components/wheel/Wheel";
 import GuessedLetters from "./components/guessedletters/GuessedLetters";
 import Keyboard from "./components/keyboard/Keyboard";
-import ModalComponent from "./components/modalcomponent/ModalComponent";
 
 // import functions
 import { getPuzzles } from "./services/getPuzzles";
@@ -18,6 +17,8 @@ import { roundMover } from "./services/roundMover";
 import { handleSpinResult } from "./services/handleSpinResult";
 import buyVowel from "./services/buyVowel";
 import { updatePlayerByIndex } from "./services/updatePlayerByIndex";
+import FinalWinnerModal from "./finalwinnermodal/FinalWinnerModal";
+import BonusModal from "./components/bonusmodal/BonusModal";
 
 // the component
 const App = () => {
@@ -52,17 +53,18 @@ const App = () => {
 
   // round data hooks
   const [round, setRound] = useState(1);
-  const [showBonusModal, setShowBonusModal] = useState(false);
   const bonusRoundNumber = 6;
   const bonusCategories = ["phrase", "thing", "living-thing|living-things", "person|people", "event", "food-and-drink", "fun-and-games", "around-the-house", "same-letter|same-name", "what-are-you-doing|what-are-you-wearing", "before-and-after", "character|fictional-character", "on-the-map"].sort();
+  const playingBonus = useRef(false);
 
   // letter data hooks
   const vowels = ["A", "E", "I", "O", "U"];
   const [letterToBuy, setLetterToBuy] = useState("");
 
-  // final winner modal data hooks
+  // modal data hooks
   const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
-  const [sortedPlayers, setSortedPlayers] = useState([]);
+  const [showBonusModal, setShowBonusModal] = useState(false);
+  const [showWheelModal, setShowWheelModal] = useState(false);
 
   // ------------------ puzzle logic ------------------
 
@@ -150,26 +152,19 @@ const App = () => {
     let toAddLetter = true;
 
     // check for a vowel and run vowel-buying code to update flag
-    if (vowels.includes(letter)) {
-      toAddLetter = buyVowel(
-        letter,
-        players,
-        setPlayers,
-        currentPlayerIndex,
-        guessed
-      );
-    } //if
+    if (vowels.includes(letter)) toAddLetter = buyVowel(letter, players, setPlayers, currentPlayerIndex, guessed);
 
+    // assuming the letter can be bought
     if (toAddLetter) {
       // update the guessed letters
       const newGuessed = [...guessed, letter.toUpperCase()];
       setGuessed(newGuessed);
 
       // get current puzzle and check if letter is in the string
-      const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase();
-      if (!currentPuzzle.includes(letter.toUpperCase())) {
+      const puzzleAllCaps = puzzles[puzzlePicked].puzzle.toUpperCase();
+      if (!puzzleAllCaps.includes(letter.toUpperCase())) {
         // alert incorrectness and move to next player
-        alert(`${letter} is incorrect! Moving to next player.`);
+        alert(`${letter} is incorrect!${playingBonus.current ? "" : " Moving to next player."}`);
         nextPlayer();
       } else {
         // earn money from guessing a consonant correctly
@@ -178,50 +173,22 @@ const App = () => {
           let count = 0;
           for (const p of puzzles[puzzlePicked].puzzle) {
             if (letter === p) count++;
-          } //for
+          }// for
 
           // calculate money won from guess; add it to player's round bank
-          const wonAmount = moneyToWin * count;
           updatePlayerByIndex(
             currentPlayerIndex,
             setPlayers,
-            (p) => ({ ...p, roundBank: p.roundBank + wonAmount }),
+            (p) => ({ ...p, roundBank: p.roundBank + (moneyToWin * count) }),
             false
           );
 
           // declare the guess correct
-          setWheelMessage(
-            `${players[currentPlayerIndex].name} has won $${wonAmount}! (Added to Round Bank)`
-          );
+          setWheelMessage(`${players[currentPlayerIndex].name} has won $${(moneyToWin * count)}! (Added to Round Bank)`);
         }//if
         
-        // check if all letters are revealed using a regex
-        const revealed = currentPuzzle
-          .split("")
-          .filter((ch) => /[A-Z]/.test(ch))
-          .every((ch) => newGuessed.includes(ch));
-
-        // move to next round, bank all round money
-        if (revealed) {
-          alert(
-            `All letters revealed! ${players[currentPlayerIndex].name} wins the round!`
-          );
-
-          // bank winner's money, reset round money for everyone
-          updatePlayerByIndex(
-            currentPlayerIndex,
-            setPlayers,
-            (p) => ({
-              ...p,
-              totalBank: p.totalBank + p.roundBank,
-              roundBank: 0,
-            }),
-            true
-          );
-
-          // move to next round
-          requestRoundMove("ROUND_ENDED");
-        } //if
+        // check if every letter got revealed
+        checkForAllRevealed(letter);
       } //if-else
 
       // regardless of whether the guess was correct, we need to spin the wheel again afterwards
@@ -229,13 +196,44 @@ const App = () => {
     } //if
   };
 
+  const checkForAllRevealed = (letter) => {
+    // check if all letters are revealed using a regex
+    const revealed = puzzles[puzzlePicked].puzzle.toUpperCase()
+      .split("")
+      .filter((ch) => /[A-Z]/.test(ch))
+      .every((ch) => [...guessed, letter.toUpperCase()].includes(ch));
+
+    // move to next round, bank all round money
+    if(revealed){
+      alert(
+        `All letters revealed! ${players[currentPlayerIndex].name} wins the round!`
+      );
+
+      // bank winner's money, reset round money for everyone
+      updatePlayerByIndex(
+        currentPlayerIndex,
+        setPlayers,
+        (p) => ({
+          ...p,
+          totalBank: p.totalBank + p.roundBank,
+          roundBank: 0,
+        }),
+        true
+      );
+
+      // move to next round
+      requestRoundMove("ROUND_ENDED");
+    } //if
+  }//const
+
   // ---------------- full clue logic ---------------
 
   const onClueGuess = (guess) => {
     // puzzle string to compare guess to
-    const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase().trim();
+    const puzzleAllCaps = puzzles[puzzlePicked].puzzle.toUpperCase().trim();
+    const guessAllCaps = guess.toUpperCase().trim();
 
-    if (guess.toUpperCase().trim() === currentPuzzle) {
+    if (guessAllCaps === puzzleAllCaps) {
       // declare winner of the round
       alert(`Correct! ${players[currentPlayerIndex].name} wins the round!`);
 
@@ -251,7 +249,7 @@ const App = () => {
       requestRoundMove("ROUND_ENDED");
     } else {
       // alert for incorrect answer, move to next player
-      alert(`Incorrect! ${players[currentPlayerIndex].name}'s turn is over.`);
+      alert(`Incorrect! ${playingBonus.current ? "" : players[currentPlayerIndex].name+"'s turn is over."}`);
       nextPlayer();
     } //if-else
   };
@@ -262,7 +260,7 @@ const App = () => {
     // prevent skipping on startup
     if (lastSpinResult === "---") return;
 
-    // determine whether to skip player while handling spin result
+    // determine whether to skip player while also handling spin result
     const toSkip = handleSpinResult(
       players,
       setPlayers,
@@ -278,6 +276,17 @@ const App = () => {
 
   // ------------------ round and turn logic ------------------
 
+  const clearEverything = (goingToNewRound) => {
+    // clear spin result, spin message and reset guessed array to default
+    setLastSpinResult("---");
+    setWheelMessage("");
+    setHasSpun(false);
+
+    if(goingToNewRound){
+      setGuessed(preguessed);
+    }//if
+  }//const func
+
   const nextPlayer = () => {
     // get index of the next player
     let ind = currentPlayerIndex < 2 ? currentPlayerIndex + 1 : 0;
@@ -292,54 +301,39 @@ const App = () => {
       );
     }//if
 
-    // set player index and enable wheel to be spun for consonant guessing
-    setCurrentPlayerIndex(ind);
-    setHasSpun(false);
-
-    // clear spin result, spin message and reset guessed array to default
-    setLastSpinResult("---");
-    setWheelMessage("");
-    setWheelMessage("");
+    clearEverything(false);
   }; //func
 
   // only difference in how a round is moved in this component is the code string
   const requestRoundMove = (code) => {
-    //move the round here
-    roundMover(code, round, setRound, setPlayers, setWheelMessage);
-
-    // clear spin result, spin message and reset guessed array to default
-    setLastSpinResult("---");
-    setWheelMessage("");
-    setGuessed(preguessed);
+    if((round === 5 && playingBonus.current === false) || (round === 6 && code !== "TOTAL_RESET")){
+      setShowFinalWinnerModal(true);
+    }else{
+      //move the round here
+      roundMover(code, round, setRound, setPlayers, setWheelMessage);
+      clearEverything(true);
+    }//if-else
   }; //const
 
-  // code to display the winners
-  const showFinalResults = () => {
-    // sort players by totalBank descending
-    const sorted = [...players].sort((a, b) => b.totalBank - a.totalBank);
-    setSortedPlayers(sorted);
-    setShowFinalWinnerModal(true);
-  };
-
-  // show final results after round 5 ends
-  useEffect(() => {
-    if (round > 5) {
-      showFinalResults();
-    } //if
-  }, [round]);
-
-  const roundResetter = () => {
-    //get new puzzles
+  // the new roundResetter()
+  const gameResetter = () => {
+    // get new puzzles
     setLoading(true);
     loadPuzzles();
 
-    //start new game with the same players
+    // disable everything
+    setHasSpun(false);
+    setShowBonusModal(false);
+    setShowFinalWinnerModal(false);
+    playingBonus.current = false;
+
+    // start new game with the same players
     requestRoundMove("TOTAL_RESET");
-  }//const
+  }//const func
 
   // ------------------ the render ------------------
 
-  return puzzles.length === 0 ? (
+  return (puzzles.length === 0) ? (
     <>
       {loading ? (
         <>
@@ -448,7 +442,7 @@ const App = () => {
           Reset Game (Resets unbanked AND banked money to 0, reset to round 1)
         </p>
         <button
-          onClick={() => roundResetter()}
+          onClick={() => gameResetter()}
           style={{ marginRight: "0.5rem" }}
         >
           Reset Game
@@ -457,87 +451,32 @@ const App = () => {
 
       {/* Modal to display winners for the base game */}
       {showFinalWinnerModal ? (
-        <ModalComponent>
-          <h2>🏆 Game Over! </h2>
-          <p>
-            1st Place: {sortedPlayers[0]?.name} (${sortedPlayers[0]?.totalBank})
-          </p>
-          <p>
-            2nd Place: {sortedPlayers[1]?.name} (${sortedPlayers[1]?.totalBank})
-          </p>
-          <p>
-            3rd Place: {sortedPlayers[2]?.name} (${sortedPlayers[2]?.totalBank})
-          </p>
-
-          {/* Bonus Round Button */}
-          <button
-            className="modalcomponent-button"
-            onClick={() => {
-              setShowFinalWinnerModal(false);
-              setShowBonusModal(true);
-            }}
-          >
-            Go to the Bonus Round!
-          </button>
-
-          {/* New Game Button */}
-          <button
-            className="modalcomponent-button"
-            onClick={() => {
-              //hide the modal
-              setShowFinalWinnerModal(false);
-
-              //start a new game
-              roundResetter();
-            }}
-          >
-            Start a New Game!
-          </button>
-        </ModalComponent>
+        <FinalWinnerModal
+          players={players}
+          round={round}
+          bonusRoundValue={bonusRoundNumber}
+          onToBonus={() => {
+            setShowFinalWinnerModal(false);
+            setShowBonusModal(true);
+            playingBonus.current = true;
+            requestRoundMove("ROUND_ENDED");
+          }}
+          onToReset={() => {
+            setShowFinalWinnerModal(false);
+            gameResetter();
+          }}
+        />
       ) : (
         <></>
       )}
 
       {/* Modal to select bonus round category */}
       {showBonusModal ? (
-        <ModalComponent>
-          <h2>Bonus Round</h2>
-          <p>
-            Please select a category to guess from.
-          </p>
-
-          <ul style={{
-            columns: "2",
-            listStyle: "none",
-            textAlign: "center",
-            alignItems: "center",
-            padding: "0"
-          }}>
-            {bonusCategories.map((category, i) => {
-              return <li key={i}>
-                <button
-                  className="modalcomponent-button"
-
-                  style={{
-                    width: "10em",
-                    marginTop: "4px",
-                    marginBottom: "4px"
-                  }}
-
-                  onClick={() => {
-                    //hide the modal
-                    setShowBonusModal(false);
-
-                    //set bonus puzzle
-                    loadPuzzles(category);
-                  }}
-                >
-                  {category.split("|")[0].replaceAll("-", " ").toLocaleUpperCase()}
-                </button>
-              </li>
-            })}
-          </ul>
-        </ModalComponent>
+        <BonusModal
+          bonusCategories={bonusCategories}
+          loadPuzzles={loadPuzzles}
+          setShowBonusModal={setShowBonusModal}
+        />
       ) : (
         <></>
       )}
