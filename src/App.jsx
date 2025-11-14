@@ -60,7 +60,20 @@ const App = () => {
   // final winner modal data hooks
   const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
   const [sortedPlayers, setSortedPlayers] = useState([]);
+  
+  // before game starts, collect player names
+  const [waitingForNames, setWaitingForNames] = useState(true);
+  const [tempNames, setTempNames] = useState(["Player 1", "Player 2", "Player 3"]);
 
+  //leaderboard
+  const [leaderboard, setLeaderboard] = useState([
+    {name: "Alice", totalBank: 2000},
+    {name: "Sarah", totalBank: 1500},
+    {name: "Cameron", totalBank: 1200},
+    {name: "Cara", totalBank: 900},
+    {name: "Sophia", totalBank: 700},
+  ]);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   // ------------------ puzzle logic ------------------
 
   const loadPuzzles = async () => {
@@ -310,10 +323,17 @@ const App = () => {
 
   // code to display the winners
   const showFinalResults = () => {
-    // sort players by totalBank descending
+    // sort players by totalBank descending. Current game winners
     const sorted = [...players].sort((a, b) => b.totalBank - a.totalBank);
     setSortedPlayers(sorted);
     setShowFinalWinnerModal(true);
+
+    //take current winners and add to leaderboard
+    setLeaderboard((prev) => {
+      const withNew = [...prev, ...sorted];
+      //sort by money, highest first
+      return withNew.sort((a,b) => b.totalBank - a.totalBank).slice(0, 20);
+    });
   };
 
   // show final results after round 5 ends
@@ -323,14 +343,37 @@ const App = () => {
     } //if
   }, [round]);
 
-  const roundResetter = () => {
-    //start new game with the same players
-    requestRoundMove("TOTAL_RESET");
+// ------------------ Name Submit -------------------- //
+const roundResetter = () => {
+  //start new game with the same players
+  requestRoundMove("TOTAL_RESET");
+  //get new puzzles
+  loadPuzzles();
+};
 
-    //get new puzzles
-    loadPuzzles();
-  }//const
+const handleNameChange = (index, value) => {
+  setTempNames((prev) => {
+    const copy = [...prev];
+    copy[index] = value;
+    return copy;
+  });
+};
 
+//handle name submission
+const handleNameSubmit = (e) => {
+  e.preventDefault();
+
+  //update players array with the new names
+  setPlayers((prev) =>
+    prev.map((p, idx) => ({
+      ...p,
+      name: tempNames[idx] || p.name,
+    }))
+  );
+
+  //hide the name modal
+  setWaitingForNames(false);
+};
   // ------------------ the render ------------------
 
   return puzzles.length === 0 ? (
@@ -352,6 +395,44 @@ const App = () => {
     </>
   ) : (
     <div className="main_container">
+      {/* --------------------- */}
+      {waitingForNames ? (
+      <ModalComponent>
+        <h2>Enter Player Names</h2>
+        <form onSubmit={handleNameSubmit}>
+          <div style={{marginBottom: "0.5rem"}}>
+            <label>Player 1: </label>
+            <input
+              type="text"
+              value={tempNames[0]}
+              onChange={(e) => handleNameChange(0, e.target.value)}
+              required
+            />
+          </div>
+          <div style = {{marginBottom: "0.5rem"}}>
+            <label>Player 2: </label>
+            <input
+              type="text"
+              value={tempNames[1]}
+              onChange={(e) => handleNameChange(1, e.target.value)}
+              required
+            />
+          </div>
+          <div style={{ marginBottom: "0.5rem" }}>
+            <label>Player 3: </label>
+            <input
+              type="text"
+              value={tempNames[2]}
+              onChange={(e) => handleNameChange(2, e.target.value)}
+              required
+            />
+          </div>
+          <button type = "submit" className = "modalcomponent-button">
+            Start Game
+            </button>
+</form>
+</ModalComponent>
+) : null}
       <div className="main_title play-bold">
         The Guildenbear's Wheel of Fortune
       </div>
@@ -408,6 +489,16 @@ const App = () => {
           Solve Puzzle
         </button>
       </div>
+
+      <br />
+      <br />
+       {/* Leaderboard button */}
+       <p>View Leaderboard</p>
+      <button onClick={() => setShowLeaderboardModal(true)}>
+        Show Leaderboard
+      </button>
+      <br />
+      <br />
 
       {/* Round debug */}
       <h3>DEBUGGING BUTTONS</h3>
@@ -493,10 +584,41 @@ const App = () => {
           >
             Start a new game
           </button>
+          <button
+        onClick={() => {
+          setShowLeaderboardModal(true);
+        }}
+        className="modalcomponent-button"
+      >
+        Show leaderboard
+      </button>
         </ModalComponent>
       ) : (
         <></>
       )}
+
+      {showLeaderboardModal ? (
+  <ModalComponent>
+    <div style={{ textAlign: "left", paddingLeft: "2rem" }}>
+      <h2 style={{ textAlign: "center" }}>Leaderboard</h2>
+      <ol style={{ marginTop: "1rem" }}>
+        {leaderboard.map((entry, i) => (
+          <li key={i} style={{ marginBottom: "0.3rem" }}>
+            {entry.name} — ${entry.totalBank}
+          </li>
+        ))}
+      </ol>
+      <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+        <button
+          onClick={() => setShowLeaderboardModal(false)}
+          className="modalcomponent-button"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </ModalComponent>
+) : null}
     </div>
   );
 };
