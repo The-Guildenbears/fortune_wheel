@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ModalComponent from "../components/modalcomponent/ModalComponent";
+import ModalComponent from "../modalcomponent/ModalComponent";
 
 const FinalWinnerModal = ({players, round, bonusRoundValue, onToBonus, onToReset}) => {
     // sort players by totalBank descending

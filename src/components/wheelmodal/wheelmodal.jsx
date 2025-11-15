@@ -1,4 +1,5 @@
 import ModalComponent from "../modalcomponent/ModalComponent";
+import Wheel from "../wheel/Wheel";
 
 const WheelModal = ({round, setLastSpinResult, hasSpun, setHasSpun, setShowWheelModal}) => {
     return(<>
@@ -9,17 +10,18 @@ const WheelModal = ({round, setLastSpinResult, hasSpun, setHasSpun, setShowWheel
                 hasSpun={hasSpun}
                 setHasSpun={setHasSpun}
             />
-            <p>{wheelMessage}</p>
 
-            <button
-                className="modalcomponent-button"
-                style={{ width: "10em", marginTop: "4px", marginBottom: "4px" }}
-                onClick={() => {
-                    setShowWheelModal(false);
-                }}
-            >
-                Close Window
-            </button>
+            {hasSpun ? <>
+                <button
+                    className="modalcomponent-button"
+                    style={{ width: "10em", marginTop: "4px", marginBottom: "4px" }}
+                    onClick={() => {
+                        setShowWheelModal(false);
+                    }}
+                >
+                    Close Window
+                </button>
+            </> : <></>}
         </ModalComponent>
     </>);
 }

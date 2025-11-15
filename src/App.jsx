@@ -7,18 +7,19 @@ import { useEffect, useState, useRef } from "react";
 // import components
 import Player from "./components/players/Player";
 import Board from "./components/board/Board";
-import Wheel from "./components/wheel/Wheel";
 import GuessedLetters from "./components/guessedletters/GuessedLetters";
-import Keyboard from "./components/keyboard/Keyboard";
+import FinalWinnerModal from "./components/finalwinnermodal/FinalWinnerModal";
+import BonusModal from "./components/bonusmodal/BonusModal";
+import ModalComponent from "./components/modalcomponent/ModalComponent";
+import KeyboardMaker from "./components/keyboard/KeyboardMaker";
+import WheelModal from "./components/wheelmodal/WheelModal";
 
 // import functions
 import { getPuzzles } from "./services/getPuzzles";
 import { roundMover } from "./services/roundMover";
 import { handleSpinResult } from "./services/handleSpinResult";
-import buyVowel from "./services/buyVowel";
+import { buyVowel } from "./services/buyVowel";
 import { updatePlayerByIndex } from "./services/updatePlayerByIndex";
-import FinalWinnerModal from "./finalwinnermodal/FinalWinnerModal";
-import BonusModal from "./components/bonusmodal/BonusModal";
 
 // the component
 const App = () => {
@@ -65,6 +66,10 @@ const App = () => {
   const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [showWheelModal, setShowWheelModal] = useState(false);
+  const [showDebugModal, setShowDebugModal] = useState(false);
+
+  // prompt data hooks
+  const [promptMode, setPromptMode] = useState("");
 
   // ------------------ puzzle logic ------------------
 
@@ -193,6 +198,7 @@ const App = () => {
 
       // regardless of whether the guess was correct, we need to spin the wheel again afterwards
       setHasSpun(false);
+      setPromptMode("PROMPT_CHOICES");
     } //if
   };
 
@@ -281,6 +287,7 @@ const App = () => {
     setLastSpinResult("---");
     setWheelMessage("");
     setHasSpun(false);
+    setPromptMode("PROMPT_CHOICES");
 
     if(goingToNewRound){
       setGuessed(preguessed);
@@ -301,12 +308,13 @@ const App = () => {
       );
     }//if
 
+    setCurrentPlayerIndex(ind);
     clearEverything(false);
   }; //func
 
   // only difference in how a round is moved in this component is the code string
   const requestRoundMove = (code) => {
-    if((round === 5 && playingBonus.current === false) || (round === 6 && code !== "TOTAL_RESET")){
+    if((code !== "TOTAL_RESET") && ((round === 5 && playingBonus.current === false) || (round === 6))){
       setShowFinalWinnerModal(true);
     }else{
       //move the round here
@@ -326,10 +334,81 @@ const App = () => {
     setShowBonusModal(false);
     setShowFinalWinnerModal(false);
     playingBonus.current = false;
+    setPromptMode("PROMPT_CHOICES");
 
     // start new game with the same players
     requestRoundMove("TOTAL_RESET");
   }//const func
+
+  // ------------------ choice prompt ------------------
+  const promptSwitcher = () => {
+    let fragmentToShow = <></>;
+
+    switch(promptMode){
+      case "PROMPT_CONSONANT":
+        fragmentToShow = <>        
+          <KeyboardMaker charOptions={"BCDFGHJKLMNPQRSTVWXYZ"} guessedLetters={guessed} setLetterToBuy={setLetterToBuy}/>
+        </>;
+        break;
+      
+      case "PROMPT_VOWEL":
+        fragmentToShow = <>
+          <KeyboardMaker charOptions={"AEIOU"} guessedLetters={guessed} setLetterToBuy={setLetterToBuy}/>
+        </>;
+        break;
+      
+      case "PROMPT_SOLVE":
+        fragmentToShow = <>
+          <input
+            type="text"
+            placeholder="Guess the Clue"
+            id="clueInput"
+            style={{ marginRight: "0.5rem" }}
+          />
+          <button
+            onClick={() => {
+              const guess = document.getElementById("clueInput").value;
+              onClueGuess(guess);
+              document.getElementById("clueInput").value = "";
+            }}
+          >
+            Solve Puzzle
+          </button>
+        </>;
+        break;
+
+      case "PROMPT_CHOICES":
+      default:
+        fragmentToShow = <>
+          <p>Does {players[currentPlayerIndex].name} want to...</p>
+          <ul style={{listStyleType: "none", display: "flex", justifyContent: "center", gap: "1em"}}>
+            <li>
+              <button className="prompt-button" onClick={() => {
+                setShowWheelModal(true);
+                setPromptMode("PROMPT_CONSONANT");
+              }}>Guess a Consonant</button>
+            </li>
+            <li>
+              <button className="prompt-button" onClick={() => {setPromptMode("PROMPT_VOWEL")}}>Buy a Vowel</button>
+            </li>
+            <li>
+              <button className="prompt-button" onClick={() => {setPromptMode("PROMPT_SOLVE")}}>Solve the Puzzle</button>
+            </li>
+          </ul>
+        </>;
+        break;
+    }//switch
+
+    return <>
+      {promptMode !== "PROMPT_CHOICES" ? <>
+        <button className="prompt-button" disabled={hasSpun} onClick={() => {setPromptMode("PROMPT_CHOICES")}}> Go Back </button>
+      </> : <></>}
+      <br/>
+      <div className="prompt-fragment">
+        {fragmentToShow}
+      </div>
+    </>
+  }//const
 
   // ------------------ the render ------------------
 
@@ -342,11 +421,18 @@ const App = () => {
         </>
       ) : (
         <>
-          <h1>Oh no!</h1>
-          <p>
-            It looks like the puzzles couldn't load in. Please refresh the page
-            and try again.
-          </p>
+          <ModalComponent>
+            <h1>Oh no!</h1>
+            <p>
+              It looks like the puzzles couldn't load in. Please refresh the page
+              and try again.
+            </p>
+            <button onClick={() => {
+              window.location.reload();
+            }}>
+              Refresh the Page
+            </button>
+          </ModalComponent>
         </>
       )}
     </>
@@ -355,99 +441,32 @@ const App = () => {
       <div className="main_title play-bold">
         The Guildenbear's Wheel of Fortune
       </div>
-      <div className="play-regular">Round {round}</div>
-      <div className="play-board">
-        <div>
-          <div id="row_board" className="box">
-            <Board
+
+      <div id="main_gridbox">
+        <div id="main_gridbox_status" className="box">
+          <h3 style={{marginLeft: "0.5em"}}>Round {round}- {players[currentPlayerIndex].name}'s Turn</h3>
+          <div>{wheelMessage}</div>
+        </div>
+        <div id="main_gridbox_board" className="box">
+          <Board
               puzzleFragment={puzzleFragment}
               category={puzzles[puzzlePicked].category}
             />
-          </div>
-
-          <div id="row_guessed" className="box">
-            <GuessedLetters guessed={guessed} preguessed={preguessed} />
-          </div>
         </div>
-        <div id="row_wheel" className="box" style={{textAlign: "center"}}>
-          <Wheel
-            round={round}
-            setWinner={setLastSpinResult}
-            hasSpun={hasSpun}
-            setHasSpun={setHasSpun}
-          />
-          <p>{wheelMessage}</p>
+        <div id="main_gridbox_prompt" className="box">
+          {promptSwitcher()}
+        </div>
+        <div id="main_gridbox_guessed" className="box">
+          <GuessedLetters guessed={guessed} preguessed={preguessed} />
+        </div>
+        <div id="main_gridbox_player" className="box">
+          <Player players={players} currentPlayerIndex={currentPlayerIndex} />
         </div>
       </div>
 
-      {/* Keyboard display */}
-      <Keyboard
-        guessedLetters={guessed}
-        setLetterToBuy={setLetterToBuy}
-        hasSpun={hasSpun}
-      />
-
-      {/* Player Display */}
-      <Player players={players} currentPlayerIndex={currentPlayerIndex} />
-
-      {/* Section for solving the entire puzzle */}
-      <div style={{ marginBottom: "0.5rem", marginTop: "1rem" }}>
-        <input
-          type="text"
-          placeholder="Guess the Clue"
-          id="clueInput"
-          style={{ marginRight: "0.5rem" }}
-        />
-        <button
-          onClick={() => {
-            const guess = document.getElementById("clueInput").value;
-            onClueGuess(guess);
-            document.getElementById("clueInput").value = "";
-          }}
-        >
-          Solve Puzzle
-        </button>
-      </div>
-
-      {/* Round debug */}
-      <div>
-        <h3>DEBUGGING BUTTONS</h3>
-        <p>Manually move to next available player</p>
-        <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
-          Next Player
-        </button>
-
-        <p>
-          End Round (Add unbanked money to Total Bank, reset unbanked money to 0,
-          and move to next round)
-        </p>
-        <button
-          onClick={() => requestRoundMove("ROUND_ENDED")}
-          style={{ marginRight: "0.5rem" }}
-          disabled={round >= bonusRoundNumber ? true : false}
-        >
-          {round >= bonusRoundNumber ? "Cannot Skip (Final Round)" : "End Round"}
-        </button>
-        <p>
-          Reset Round (Reset unbanked money to 0, does not move to next round)
-        </p>
-        <button
-          onClick={() => requestRoundMove("ROUND_RESET")}
-          style={{ marginRight: "0.5rem" }}
-        >
-          Reset Round
-        </button>
-
-        <p>
-          Reset Game (Resets unbanked AND banked money to 0, reset to round 1)
-        </p>
-        <button
-          onClick={() => gameResetter()}
-          style={{ marginRight: "0.5rem" }}
-        >
-          Reset Game
-        </button>
-      </div>
+      <button onClick={() => {setShowDebugModal(true)}}>Show Debug Options</button>
+    
+    {/* --------- MODALS GO HERE ---------*/}
 
       {/* Modal to display winners for the base game */}
       {showFinalWinnerModal ? (
@@ -480,6 +499,70 @@ const App = () => {
       ) : (
         <></>
       )}
+
+      {showWheelModal ? <>
+          <WheelModal
+            round={round}
+            setLastSpinResult={setLastSpinResult}
+            hasSpun={hasSpun}
+            setHasSpun={setHasSpun}
+            setShowWheelModal={setShowWheelModal}
+          />
+        </> : <></>}
+
+      {showDebugModal ? <>
+        <ModalComponent>
+          {/* Round debug */}
+          <div>
+            <h3>DEBUGGING BUTTONS</h3>
+            <p>Manually move to next available player</p>
+            <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
+              Next Player
+            </button>
+
+            <p>
+              End Round (Add unbanked money to Total Bank, reset unbanked money to 0,
+              and move to next round)
+            </p>
+            <button
+              onClick={() => requestRoundMove("ROUND_ENDED")}
+              style={{ marginRight: "0.5rem" }}
+              disabled={round >= bonusRoundNumber ? true : false}
+            >
+              {round >= bonusRoundNumber ? "Cannot Skip (Final Round)" : "End Round"}
+            </button>
+            <p>
+              Reset Round (Reset unbanked money to 0, does not move to next round)
+            </p>
+            <button
+              onClick={() => requestRoundMove("ROUND_RESET")}
+              style={{ marginRight: "0.5rem" }}
+            >
+              Reset Round
+            </button>
+
+            <p>
+              Reset Game (Resets unbanked AND banked money to 0, reset to round 1)
+            </p>
+            <button
+              onClick={() => gameResetter()}
+              style={{ marginRight: "0.5rem" }}
+            >
+              Reset Game
+            </button>
+          </div>
+
+          <br/>
+          <button 
+            className="modalcomponent-button"
+            style={{ width: "10em", marginTop: "4px", marginBottom: "4px" }}
+            onClick={() => {setShowDebugModal(false)}}
+          >
+            Close Debug Window
+          </button>
+        </ModalComponent>
+      </> : <></>}
+
     {/* End of Container */}
     </div>
   );

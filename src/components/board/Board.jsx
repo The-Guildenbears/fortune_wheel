@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import BoardFakeRow from "./BoardFakeRow";
 
 const Board = ({puzzleFragment, category}) => {
   // parameters:
@@ -8,10 +7,6 @@ const Board = ({puzzleFragment, category}) => {
   
   //make the interactable rows with a loop
   //the keys determine which squares are white or green
-
-  // width of rows is 12-14-14-12
-  const rowWidths = [12, 14, 14, 12];
-
 
   //make rows for the cells of the board
   let autoRows = [];

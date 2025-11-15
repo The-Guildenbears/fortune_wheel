@@ -48,19 +48,19 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
   return (
     <>
       <div className="wheel-container">
-        <div className="controls">
-          <button
-            onClick={handleSpinClick}
-            disabled={mustSpin || hasSpun}
-            style={{ marginBottom: "0.5rem", marginTop: "1rem" }}
-          >
-            {hasSpun
-              ? "Guess a consonant first!"
-              : mustSpin
-              ? "Now Spinning..."
-              : "SPIN! THE! WHEEL!!!"}
-          </button>
-        </div>
+        {hasSpun ? <></> : <>
+          <div className="controls">
+            <button
+              onClick={handleSpinClick}
+              style={{ marginBottom: "0.5rem", marginTop: "1rem" }}
+              disabled={mustSpin}
+            >
+              {mustSpin
+                ? "Now Spinning..."
+                : "SPIN! THE! WHEEL!!!"}
+            </button>
+          </div>
+        </>}
 
         {wheelData.length > 0 && (
           <div className="wheel-wrapper">

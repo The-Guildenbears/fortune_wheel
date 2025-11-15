@@ -4,13 +4,8 @@ import PlayerCard from "./PlayerCard";
 const Player = ({ players, currentPlayerIndex}) => {
 
   return(
-    <>
-      <h3>PLAYERS</h3>
-      <div style={{ marginBottom: "0.75rem" }}>
-        <div style={{ marginBottom: "0.5rem" }}>
-          <strong>{players[currentPlayerIndex].name}'s Turn</strong> 
-        </div>
-
+    <div style={{padding: "0", paddingLeft: "0.5em"}}>
+      <div>
         <ul style={{ listStyleType: "none", paddingLeft: 0 }} className="player-list">
           {players.map((p, i) => (
             <li key={i}>
@@ -19,7 +14,7 @@ const Player = ({ players, currentPlayerIndex}) => {
           ))}
         </ul>
       </div>
-    </>
+    </div>
   );
 }
 
