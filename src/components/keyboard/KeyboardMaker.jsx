@@ -3,7 +3,7 @@
 
 import { Fragment } from "react/jsx-runtime";
 
-const KeyboardMaker = ({ charOptions, guessedLetters, setLetterToBuy }) => {
+const KeyboardMaker = ({ charOptions, guessedLetters, setLetterToBuy, isVowels, hasSpun }) => {
   // parameters:
   // "charOptions" are the possible characters to select
   // "guessedLetters" is an array of letters guessed so far
@@ -30,12 +30,12 @@ const KeyboardMaker = ({ charOptions, guessedLetters, setLetterToBuy }) => {
               onClick={() => handleClick(ch)}
               // disable button if the letter was already guessed
               // disable button also when it's a consonant and the wheel hasn't spun yet
-              disabled={guessedLetters.includes(ch)}
+              disabled={(!isVowels && !hasSpun) || guessedLetters.includes(ch)}
               style={{
                 marginRight: "0.5rem",
                 marginBottom: "0.5rem",
                 // letter fades if picked
-                opacity: guessedLetters.includes(ch) ? 0.5 : 1
+                opacity: guessedLetters.includes(ch) ? 0.5 : 1,
               }}
             >
               {ch}

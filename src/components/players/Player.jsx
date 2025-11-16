@@ -4,7 +4,7 @@ import PlayerCard from "./PlayerCard";
 const Player = ({ players, currentPlayerIndex}) => {
 
   return(
-    <div style={{padding: "0", paddingLeft: "0.5em"}}>
+    <div style={{padding: "0", paddingLeft: "0.5em", paddingTop: "0.5em"}}>
       <div>
         <ul style={{ listStyleType: "none", paddingLeft: 0 }} className="player-list">
           {players.map((p, i) => (

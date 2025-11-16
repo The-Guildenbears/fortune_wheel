@@ -20,23 +20,30 @@ import { roundMover } from "./services/roundMover";
 import { handleSpinResult } from "./services/handleSpinResult";
 import { buyVowel } from "./services/buyVowel";
 import { updatePlayerByIndex } from "./services/updatePlayerByIndex";
+import DebugModal from "./components/debugmodal/DebugModal";
+import NamesModal from "./components/namesmodal/NamesModal";
 
 // the component
 const App = () => {
   // --------- data hooks ---------
 
   // startup data hooks
-  const [puzzles, setPuzzles] = useState([]);
   const [loading, setLoading] = useState(true);
   const fetching = useRef(true);
 
   // puzzle data hooks
+  const [puzzles, setPuzzles] = useState([]);
   const [puzzlePicked, setPuzzlePicked] = useState(0);
   const [puzzleFragment, setPuzzleFragment] = useState("");
 
   // data hooks for guessed letters
   const preguessed = [ ",", ".", "?", "!", "&", "-", "'", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" ];
   const [guessed, setGuessed] = useState(preguessed);
+  const bonusGiven = ["R", "S", "T", "L", "N", "E"];
+
+  // letter data hooks
+  const vowels = ["A", "E", "I", "O", "U"];
+  const [letterToBuy, setLetterToBuy] = useState("");
 
   // player data hooks
   const [players, setPlayers] = useState([
@@ -45,6 +52,17 @@ const App = () => {
     { id: 3, name: "Player 3", roundBank: 500, totalBank: 0, bankrupt: false },
   ]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [tempNames, setTempNames] = useState(["Player 1", "Player 2", "Player 3"]);
+
+  // leaderboard data hooks
+  const [leaderboard, setLeaderboard] = useState([]);
+  const leaderboardDefault = [
+    {name: "Bailey", totalBank: 12000},
+    {name: "Leo", totalBank: 1500},
+    {name: "Alice", totalBank: 1200},
+    {name: "Cara", totalBank: 900},
+    {name: "Sophia", totalBank: 700},
+  ];
 
   // wheel data hooks
   const [lastSpinResult, setLastSpinResult] = useState("---");
@@ -52,21 +70,19 @@ const App = () => {
   const [hasSpun, setHasSpun] = useState(false);
   const [moneyToWin, setMoneyToWin] = useState(0);
 
-  // round data hooks
+  // round and bonus round data hooks
   const [round, setRound] = useState(1);
   const bonusRoundNumber = 6;
   const bonusCategories = ["phrase", "thing", "living-thing|living-things", "person|people", "event", "food-and-drink", "fun-and-games", "around-the-house", "same-letter|same-name", "what-are-you-doing|what-are-you-wearing", "before-and-after", "character|fictional-character", "on-the-map"].sort();
   const playingBonus = useRef(false);
-
-  // letter data hooks
-  const vowels = ["A", "E", "I", "O", "U"];
-  const [letterToBuy, setLetterToBuy] = useState("");
 
   // modal data hooks
   const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [showWheelModal, setShowWheelModal] = useState(false);
   const [showDebugModal, setShowDebugModal] = useState(false);
+  const [showNamesModal, setShowNamesModal] = useState(true);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
 
   // prompt data hooks
   const [promptMode, setPromptMode] = useState("");
@@ -97,7 +113,11 @@ const App = () => {
     if (!fetching.current) return;
     fetching.current = false;
 
+    // load the puzzles
     loadPuzzles();
+
+    // load the leaderboard
+    leaderboardLoader();
   }, []); //useEffect
 
   // pick a new puzzle whenever a new round starts
@@ -108,7 +128,7 @@ const App = () => {
       setPuzzlePicked((round !== bonusRoundNumber) ? round : 0);
 
       // reset guessed letters for the new puzzle
-      setGuessed(preguessed);
+      setGuessed(round === bonusRoundNumber ? [...preguessed, bonusGiven] : preguessed);
 
       // lock consonants
       setHasSpun(false);
@@ -287,6 +307,7 @@ const App = () => {
     setLastSpinResult("---");
     setWheelMessage("");
     setHasSpun(false);
+    setShowWheelModal(false);
     setPromptMode("PROMPT_CHOICES");
 
     if(goingToNewRound){
@@ -295,20 +316,24 @@ const App = () => {
   }//const func
 
   const nextPlayer = () => {
-    // get index of the next player
-    let ind = currentPlayerIndex < 2 ? currentPlayerIndex + 1 : 0;
+    // the bonus round doesn't have multiple players
+    if(!playingBonus.current){
+      // get index of the next player
+      let ind = currentPlayerIndex < 2 ? currentPlayerIndex + 1 : 0;
 
-    // if player is bankrupt, revert bankruptcy
-    if(players[ind].bankrupt){
-      updatePlayerByIndex(
-        ind,
-        setPlayers,
-        (p) => ({ ...p, bankrupt: false }),
-        false
-      );
+      // if player is bankrupt, revert bankruptcy
+      if(players[ind].bankrupt){
+        updatePlayerByIndex(
+          ind,
+          setPlayers,
+          (p) => ({ ...p, bankrupt: false }),
+          false
+        );
+      }//if
+
+      setCurrentPlayerIndex(ind);
     }//if
 
-    setCurrentPlayerIndex(ind);
     clearEverything(false);
   }; //func
 
@@ -316,6 +341,7 @@ const App = () => {
   const requestRoundMove = (code) => {
     if((code !== "TOTAL_RESET") && ((round === 5 && playingBonus.current === false) || (round === 6))){
       setShowFinalWinnerModal(true);
+      leaderboardSaver();
     }else{
       //move the round here
       roundMover(code, round, setRound, setPlayers, setWheelMessage);
@@ -333,12 +359,42 @@ const App = () => {
     setHasSpun(false);
     setShowBonusModal(false);
     setShowFinalWinnerModal(false);
+    setShowDebugModal(false);
     playingBonus.current = false;
     setPromptMode("PROMPT_CHOICES");
 
     // start new game with the same players
     requestRoundMove("TOTAL_RESET");
+
+    //ask for names
+    setShowNamesModal(true);
   }//const func
+
+  // ------------------ player naming ------------------
+
+  const handleNameChange = (index, value) => {
+    setTempNames((prev) => {
+      const copy = [...prev];
+      copy[index] = value;
+      return copy;
+    });
+  };
+
+  //handle name submission
+  const handleNameSubmit = (e) => {
+    e.preventDefault();
+
+    //update players array with the new names
+    setPlayers((prev) =>
+      prev.map((p, idx) => ({
+        ...p,
+        name: tempNames[idx] || p.name,
+      }))
+    );
+
+    //hide the name modal
+    setShowNamesModal(false);
+  };
 
   // ------------------ choice prompt ------------------
   const promptSwitcher = () => {
@@ -346,14 +402,14 @@ const App = () => {
 
     switch(promptMode){
       case "PROMPT_CONSONANT":
-        fragmentToShow = <>        
-          <KeyboardMaker charOptions={"BCDFGHJKLMNPQRSTVWXYZ"} guessedLetters={guessed} setLetterToBuy={setLetterToBuy}/>
+        fragmentToShow = <>    
+          <KeyboardMaker charOptions={"BCDFGHJKLMNPQRSTVWXYZ"} guessedLetters={guessed} setLetterToBuy={setLetterToBuy} isVowels={false} hasSpun={hasSpun}/>
         </>;
         break;
       
       case "PROMPT_VOWEL":
         fragmentToShow = <>
-          <KeyboardMaker charOptions={"AEIOU"} guessedLetters={guessed} setLetterToBuy={setLetterToBuy}/>
+          <KeyboardMaker charOptions={"AEIOU"} guessedLetters={guessed} setLetterToBuy={setLetterToBuy} isVowels={true} hasSpun={hasSpun}/>
         </>;
         break;
       
@@ -389,7 +445,12 @@ const App = () => {
               }}>Guess a Consonant</button>
             </li>
             <li>
-              <button className="prompt-button" onClick={() => {setPromptMode("PROMPT_VOWEL")}}>Buy a Vowel</button>
+              <button className="prompt-button" 
+                onClick={() => {setPromptMode("PROMPT_VOWEL")}} 
+                disabled={players[currentPlayerIndex].roundBank < 500}
+              >
+                ($500) Buy a Vowel
+              </button>
             </li>
             <li>
               <button className="prompt-button" onClick={() => {setPromptMode("PROMPT_SOLVE")}}>Solve the Puzzle</button>
@@ -409,6 +470,54 @@ const App = () => {
       </div>
     </>
   }//const
+
+  // ------------------ leaderboard functions ------------------
+  const leaderboardLoader = () => {
+    const leaderboardString = localStorage.getItem("leaderboard");
+    if(leaderboardString !== null){
+      // make an array of objects; split raw string into entries by the bar
+      let tempObjects = [];
+      let strFragments = leaderboardString.split("|");
+
+      for(let str of strFragments){
+        const strSplits = str.split(" ");
+        if(strSplits[0] && !isNaN(strSplits[1])){
+          tempObjects.push({name: strSplits[0], totalBank: parseInt(strSplits[1])});
+        }//if
+      }//for
+
+      setLeaderboard(tempObjects);
+    }//if
+  };//const
+
+  const leaderboardSaver = () => {
+    // empty string to send to localStorage
+    let res = "";
+
+    // convert current player scores into entries
+    let playerEntries = [];
+    for(let i = 0; i < 3; i++){
+      if(players[i].totalBank > 0){
+        playerEntries.push({name: players[i].name, totalBank: players[i].totalBank});
+      }//if
+    }//for
+    
+    // save the players if they are in the top 20 players
+    const updatedLeaderboard = [...leaderboard, ...playerEntries].sort((a, b) => b.totalBank - a.totalBank).slice(0, 20);
+    setLeaderboard(updatedLeaderboard);
+
+    // convert every entry into a string
+    for(let entry of updatedLeaderboard){
+      // entries are saved as "[name 1] [totalBank 1]|[name 2] [totalBank 2],..." as one long string
+      res += `${entry.name} ${entry.totalBank}|`;
+    }//for
+
+    // remove the final bar
+    res = res.length > 0 ? res.slice(0, -1) : res;
+
+    // save the string
+    localStorage.setItem("leaderboard", res);
+  };//const
 
   // ------------------ the render ------------------
 
@@ -484,6 +593,10 @@ const App = () => {
             setShowFinalWinnerModal(false);
             gameResetter();
           }}
+          onShowLeaderboard={() => {
+            setShowFinalWinnerModal(false);
+            setShowLeaderboardModal(true);
+          }}
         />
       ) : (
         <></>
@@ -511,54 +624,59 @@ const App = () => {
         </> : <></>}
 
       {showDebugModal ? <>
+        <DebugModal
+          isGameOver={showFinalWinnerModal}
+          isBonusRound={playingBonus.current}
+          onNextPlayer={() => {nextPlayer()}}
+          onEndRound={() => {requestRoundMove("ROUND_ENDED")}}
+          onResetRound={() => {requestRoundMove("ROUND_RESET")}}
+          onResetGame={() => {gameResetter()}}
+          onCloseWindow={() => {setShowDebugModal(false)}}
+        />
+      </> : <></>}
+
+      {showNamesModal ? <>
+        <NamesModal
+          onSubmitFunc={handleNameSubmit}
+          tempNames={tempNames}
+          handleNameChange={handleNameChange}
+        />
+      </> : <></>}
+
+      {showLeaderboardModal ? <>
         <ModalComponent>
-          {/* Round debug */}
-          <div>
-            <h3>DEBUGGING BUTTONS</h3>
-            <p>Manually move to next available player</p>
-            <button onClick={nextPlayer} style={{ marginRight: "0.5rem" }}>
-              Next Player
-            </button>
+          <h2>The Leaderboard</h2>
+          <ul style={{listStyleType: "none", padding: "0"}}>
+            {leaderboard.map((entry, i) => (
+              <li key={`leaderboard_entry_${i}`}>
+                {entry.name}: ${entry.totalBank}
+              </li>
+            ))}
+          </ul>
 
-            <p>
-              End Round (Add unbanked money to Total Bank, reset unbanked money to 0,
-              and move to next round)
-            </p>
-            <button
-              onClick={() => requestRoundMove("ROUND_ENDED")}
-              style={{ marginRight: "0.5rem" }}
-              disabled={round >= bonusRoundNumber ? true : false}
-            >
-              {round >= bonusRoundNumber ? "Cannot Skip (Final Round)" : "End Round"}
-            </button>
-            <p>
-              Reset Round (Reset unbanked money to 0, does not move to next round)
-            </p>
-            <button
-              onClick={() => requestRoundMove("ROUND_RESET")}
-              style={{ marginRight: "0.5rem" }}
-            >
-              Reset Round
-            </button>
-
-            <p>
-              Reset Game (Resets unbanked AND banked money to 0, reset to round 1)
-            </p>
-            <button
-              onClick={() => gameResetter()}
-              style={{ marginRight: "0.5rem" }}
-            >
-              Reset Game
-            </button>
-          </div>
-
-          <br/>
-          <button 
+          <button
             className="modalcomponent-button"
             style={{ width: "10em", marginTop: "4px", marginBottom: "4px" }}
-            onClick={() => {setShowDebugModal(false)}}
+            onClick={() => {
+              setShowLeaderboardModal(false);
+              setShowFinalWinnerModal(true);
+            }}
           >
-            Close Debug Window
+            Go Back
+          </button>
+
+          <button
+            className="modalcomponent-button"
+            style={{ width: "10em", marginTop: "4px", marginBottom: "4px" }}
+
+            onClick={() => {
+              if(window.confirm("Reset the leaderboard to default?")){
+                localStorage.removeItem("leaderboard");
+                setLeaderboard(leaderboardDefault);
+              }
+            }}
+          >
+            Reset Leaderboard
           </button>
         </ModalComponent>
       </> : <></>}

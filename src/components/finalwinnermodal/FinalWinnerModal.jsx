@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ModalComponent from "../modalcomponent/ModalComponent";
 
-const FinalWinnerModal = ({players, round, bonusRoundValue, onToBonus, onToReset}) => {
+const FinalWinnerModal = ({players, round, bonusRoundValue, onToBonus, onToReset, onShowLeaderboard}) => {
     // sort players by totalBank descending
     const [sortedPlayers, setSortedPlayers] = useState([...players].sort((a, b) => b.totalBank - a.totalBank));
 
@@ -32,6 +32,14 @@ const FinalWinnerModal = ({players, round, bonusRoundValue, onToBonus, onToReset
             onClick={onToReset}
           >
             Start a New Game!
+          </button>
+
+          {/* Leaderboard Button */}
+          <button
+            className="modalcomponent-button"
+            onClick={onShowLeaderboard}
+          >
+            Show the Leaderboard
           </button>
         </ModalComponent>
     </>);

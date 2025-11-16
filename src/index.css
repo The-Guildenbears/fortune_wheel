@@ -121,7 +121,6 @@
      1px 1px 0 #000;
 
   width: 8em;
-  height: 5em;
 }
 
 .player-card-inactive {
@@ -131,7 +130,6 @@
   filter: brightness(80%) saturate(110%);
 
   width: 8em;
-  height: 5em;
 }
 
 .player-card-bankrupt {
@@ -141,7 +139,6 @@
   padding: 0.75em;
 
   width: 8em;
-  height: 5em;
 }
 
 /*--------- ModalComponent styling ---------*/
@@ -193,6 +190,10 @@
   cursor: pointer;
 }
 
+#modal_names_form p{
+  padding-top: 0.5em;
+}
+
 /*--------- gridbox styling ---------*/
 #main_gridbox {
   width: 100%;
@@ -235,6 +236,8 @@
   grid-column-end: 10;
   grid-row-start: 6;
   grid-row-end: 10;
+
+  height: 7em;
 }
 
 #main_gridbox_prompt div {

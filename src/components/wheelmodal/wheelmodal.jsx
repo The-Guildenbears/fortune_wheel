@@ -11,17 +11,13 @@ const WheelModal = ({round, setLastSpinResult, hasSpun, setHasSpun, setShowWheel
                 setHasSpun={setHasSpun}
             />
 
-            {hasSpun ? <>
-                <button
-                    className="modalcomponent-button"
-                    style={{ width: "10em", marginTop: "4px", marginBottom: "4px" }}
-                    onClick={() => {
-                        setShowWheelModal(false);
-                    }}
-                >
-                    Close Window
-                </button>
-            </> : <></>}
+            <button
+                className="modalcomponent-button"
+                style={{ width: "10em", marginTop: "4px", marginBottom: "4px" }}
+                onClick={() => {setShowWheelModal(false);}}
+            >
+                Close Window
+            </button>
         </ModalComponent>
     </>);
 }

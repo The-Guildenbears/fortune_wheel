@@ -4,7 +4,7 @@ const PlayerCard = ({player, index, isTurn}) => {
     const strClass = player.bankrupt ? "player-card-bankrupt" : (isTurn ? "player-card" : "player-card-inactive");
 
     return(<>
-        <div className={strClass} id={strId}>
+        <div className={strClass} id={player.bankrupt ? "" : strId}>
             <div>{isTurn ? "👉 " : ""} {player.name}</div>
             <div>Round: ${player.roundBank}</div>
             <div>Total: ${player.totalBank}{" "}</div>
