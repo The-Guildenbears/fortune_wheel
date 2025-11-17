@@ -14,6 +14,8 @@ import ModalComponent from "./components/modalcomponent/ModalComponent";
 import KeyboardMaker from "./components/keyboard/KeyboardMaker";
 import WheelModal from "./components/wheelmodal/WheelModal";
 import BonusMain from "./components/bonusmodal/BonusMain";
+import DebugModal from "./components/debugmodal/DebugModal";
+import NamesModal from "./components/namesmodal/NamesModal";
 
 // import functions
 import { getPuzzles } from "./services/getPuzzles";
@@ -21,8 +23,6 @@ import { roundMover } from "./services/roundMover";
 import { handleSpinResult } from "./services/handleSpinResult";
 import { buyVowel } from "./services/buyVowel";
 import { updatePlayerByIndex } from "./services/updatePlayerByIndex";
-import DebugModal from "./components/debugmodal/DebugModal";
-import NamesModal from "./components/namesmodal/NamesModal";
 
 // the component
 const App = () => {
@@ -31,9 +31,6 @@ const App = () => {
   // startup data hooks
   const [loading, setLoading] = useState(true);
   const fetching = useRef(true);
-
-  // Bonus Round toggle variable
-  const [bonusRound, setBonusRound] = useState(false);
 
   // puzzle data hooks
   const [puzzles, setPuzzles] = useState([]);

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 
 export default function Clock({ bonusSolved, startCountdown, setCountdown }) {
-  const [timeLeft, setTimeLeft] = useState(10);
+  const initialTime = 30;
+  const [timeLeft, setTimeLeft] = useState(initialTime);
   // Countdown logic
   useEffect(() => {
     if (!startCountdown) return;
@@ -17,9 +18,9 @@ export default function Clock({ bonusSolved, startCountdown, setCountdown }) {
   const handleCountdown = () => {
     if (startCountdown) {
       setCountdown(false);
-      setTimeLeft(10);
+      setTimeLeft(initialTime);
     } else {
-      setTimeLeft(10);
+      setTimeLeft(initialTime);
       setCountdown(true);
     }
   };
@@ -28,7 +29,7 @@ export default function Clock({ bonusSolved, startCountdown, setCountdown }) {
   const DOT_ANGLES = Array.from({ length: 20 }, (_, i) => 9 + i * 18);
   const DOT_ORDER = [];
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 30; i++) {
     DOT_ORDER.push(DOT_ANGLES[i], DOT_ANGLES[19 - i]);
   }
 

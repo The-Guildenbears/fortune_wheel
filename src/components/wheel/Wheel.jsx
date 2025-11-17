@@ -77,17 +77,15 @@ const Wheel = ({
   return (
     <div className="wheel-container">
       <div className="controls">
-        <button
+        {hasSpun ? <></> : <button
           onClick={handleSpinClick}
           disabled={mustSpin || hasSpun || wheel.length === 0}
           style={{ marginBottom: "0.5rem", marginTop: "1rem" }}
         >
-          {hasSpun
-            ? "Guess a consonant first!"
-            : mustSpin
+          {mustSpin
             ? "Now Spinning..."
             : "SPIN! THE! WHEEL!!!"}
-        </button>
+        </button>}
       </div>
 
       {wheelData.length > 0 && (
