@@ -6,18 +6,26 @@ export const WHEEL_CONFIG = {
     R1: 2500,
     R2: 3500,
     R3: 3500,
-    R: 5000,
+    R: 5000, 
   },
   TOP_HEX: "#FFD700",
-  //   Bankrupt
-  BR: 2,
-  BR_VAL: "BANKRUPT",
-  BR_HEX: "#000000",
-  //   Lose Turn
-  LT: 1,
+  BR: 2,               
+  BR_VAL: "BANKRUPT",  
+  BR_HEX: "#000000",   
+  LT: 1,              
   LT_VAL: "LOSE TURN",
   LT_HEX: "#FFFFFF",
-  //   Mystery wedge
-  MY_VAL: "MYSTERY",
-  MY_HEX: "#ccff00",
+  MY_VAL: "MYSTERY",   
+  MY_HEX: "#ccff00",   
+
+  // Mystery wedge
+  // If the player does NOT flip
+  // Player will get $1000 per consonant
+  MY_SAFE_CASH: 1000,
+
+  // If player does flip and wins
+  // $10000 bonus gets added directly to roundBank
+  MY_BONUS_CASH: 10000,
 };
+
+

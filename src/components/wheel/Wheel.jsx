@@ -3,7 +3,14 @@ import { Wheel as RouletteWheel } from "react-custom-roulette";
 import "./wheel.css";
 import { CreateWheel, MysteryWedge } from "./CreateWheel";
 
-const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
+const Wheel = ({
+  round,
+  setWinner,
+  hasSpun,
+  setHasSpun,
+  onMysteryLanded,
+  onMysteryFlipped,
+}) => {
   const [mysteryRevealed, setReveal] = useState(false);
   const [regularWheel, setRegularWheel] = useState([]);
   const [mysteryWheel, setMysteryWheel] = useState([]);
@@ -16,6 +23,8 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
     setRegularWheel(base);
     setMysteryWheel(withMystery);
     setHasSpun(false);
+    // reset reveal when round changes
+    setReveal(false); 
   }, [round, setHasSpun]);
 
   const wheel = mysteryRevealed ? regularWheel : mysteryWheel;
@@ -30,11 +39,17 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
 
   const handleStopSpinning = () => {
     setMustSpin(false);
-    setWinner(wheel[prizeNumber]?.val);
+    const segment = wheel[prizeNumber];
+    const value = segment?.val;
+
+    setWinner(value);
     setHasSpun(true);
+
+    if (value === "MYSTERY" && typeof onMysteryLanded === "function") {
+      onMysteryLanded();
+    }
   };
 
-  // Build render data from current wheel
   const wheelData = useMemo(() => {
     return wheel.map((segment) => {
       const isNumber = typeof segment.val === "number";
@@ -101,9 +116,24 @@ const Wheel = ({ round, setWinner, hasSpun, setHasSpun }) => {
           />
         </div>
       )}
-      <button onClick={() => setReveal((prev) => !prev)}>Switch</button>
+
+      {round === 2 && (
+        <button
+          onClick={() => {
+            // flip between mysteryWheel and regularWheel
+            setReveal((prev) => !prev);
+
+            if (typeof onMysteryFlipped === "function") {
+              onMysteryFlipped();
+            }
+          }}
+        >
+          Switch
+        </button>
+      )}
     </div>
   );
 };
 
 export default Wheel;
+

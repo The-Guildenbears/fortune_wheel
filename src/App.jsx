@@ -13,6 +13,9 @@ import Keyboard from "./components/keyboard/Keyboard";
 import ModalComponent from "./components/modalcomponent/ModalComponent";
 import BonusMain from "./components/bonus_round/BonusMain";
 
+// import wheel config (for MY_BONUS_CASH)
+import { WHEEL_CONFIG } from "./components/wheel/WheelConfig";
+
 // import functions
 import { getPuzzles } from "./services/getPuzzles";
 import { roundMover } from "./services/roundMover";
@@ -84,6 +87,10 @@ const App = () => {
   const [showFinalWinnerModal, setShowFinalWinnerModal] = useState(false);
   const [sortedPlayers, setSortedPlayers] = useState([]);
 
+  // Mystery wedge state
+  const [mysteryActive, setMysteryActive] = useState(false);
+  const [mysteryFlipped, setMysteryFlipped] = useState(false);
+
   // ------------------ puzzle logic ------------------
 
   // get the puzzles only once
@@ -96,9 +103,6 @@ const App = () => {
       try {
         // attempt to get a list of puzzles
         const data = await getPuzzles();
-        // uncomment line below for debugging purposes
-        //console.log(data);
-
         // add to list of puzzles to choose from
         setPuzzles(data);
       } catch (error) {
@@ -130,7 +134,6 @@ const App = () => {
     if (puzzles.length > 0) {
       // get copy of puzzle string
       let str = puzzles[puzzlePicked].puzzle;
-      // alert(str);
 
       // build the fragmentary string to pass to the board
       let res = "";
@@ -153,7 +156,7 @@ const App = () => {
     } //if
   }, [guessed, puzzles, puzzlePicked]); //useEffect
 
-  // ------------------ letter buying logic ------------------
+  // ------------------ letter buying / picking logic ------------------
 
   useEffect(() => {
     // don't run picking code when value is blank ("");
@@ -217,6 +220,19 @@ const App = () => {
 
         // move to next round, bank all round money
         if (revealed) {
+          // If MYSTERY was active and flipped, add the $10,000 bonus to roundBank
+          if (mysteryActive && mysteryFlipped) {
+            updatePlayerByIndex(
+              currentPlayerIndex,
+              setPlayers,
+              (p) => ({
+                ...p,
+                roundBank: p.roundBank + WHEEL_CONFIG.MY_BONUS_CASH,
+              }),
+              false
+            );
+          }
+
           alert(
             `All letters revealed! ${players[currentPlayerIndex].name} wins the round!`
           );
@@ -250,6 +266,19 @@ const App = () => {
     const currentPuzzle = puzzles[puzzlePicked].puzzle.toUpperCase().trim();
 
     if (guess.toUpperCase().trim() === currentPuzzle) {
+      // If MYSTERY was active and flipped, add the $10,000 bonus to roundBank
+      if (mysteryActive && mysteryFlipped) {
+        updatePlayerByIndex(
+          currentPlayerIndex,
+          setPlayers,
+          (p) => ({
+            ...p,
+            roundBank: p.roundBank + WHEEL_CONFIG.MY_BONUS_CASH,
+          }),
+          false
+        );
+      }
+
       // declare winner of the round
       alert(`Correct! ${players[currentPlayerIndex].name} wins the round!`);
 
@@ -320,6 +349,10 @@ const App = () => {
     setLastSpinResult("---");
     setWheelMessage("");
     setGuessed(preguessed);
+
+    // clear mystery state whenever the round moves/resets
+    setMysteryActive(false);
+    setMysteryFlipped(false);
   }; //const
 
   // escape freezing when all players are bankrupt
@@ -369,7 +402,7 @@ const App = () => {
   ) : (
     <div className="main_container">
       <div className="main_title play-bold">
-        The Guildenbear's Wheel of Fortune
+        The Guildenbear&apos;s Wheel of Fortune
       </div>
       <div className="play-regular">Round {round}</div>
       <div className="play-board">
@@ -391,7 +424,14 @@ const App = () => {
             setWinner={setLastSpinResult}
             hasSpun={hasSpun}
             setHasSpun={setHasSpun}
-          />{" "}
+            onMysteryLanded={() => {
+              setMysteryActive(true);
+              setMysteryFlipped(false);
+            }}
+            onMysteryFlipped={() => {
+              setMysteryFlipped(true);
+            }}
+          />
         </div>
       </div>
 
@@ -513,7 +553,6 @@ const App = () => {
           {/* Close Button */}
           <button
             onClick={() => {
-              //hide the modal
               setShowFinalWinnerModal(false);
 
               //start new game with the same players
@@ -532,3 +571,5 @@ const App = () => {
 };
 
 export default App;
+
+
