@@ -3,7 +3,9 @@
   width: 80%;
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
 }
-
+button {
+  cursor: pointer;
+}
 #row_players {
   display: flex;
   justify-content: space-evenly;
