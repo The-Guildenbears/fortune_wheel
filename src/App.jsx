@@ -331,9 +331,9 @@ const App = () => {
     loadPuzzles();
   }//const
 
-  // ------------------ the render ------------------
+  // ------------------ the returned render ------------------
 
-  return puzzles.length === 0 ? (
+  return((puzzles.length === 0) ? (
     <>
       {loading ? (
         <>
@@ -498,7 +498,7 @@ const App = () => {
         <></>
       )}
     </div>
-  );
+  ));
 };
 
 export default App;
