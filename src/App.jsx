@@ -85,7 +85,7 @@ const App = () => {
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
 
   // prompt data hooks
-  const [promptMode, setPromptMode] = useState("");
+  const [promptMode, setPromptMode] = useState("PROMPT_CHOICES");
 
   // ------------------ puzzle logic ------------------
 
@@ -430,6 +430,13 @@ const App = () => {
           >
             Solve Puzzle
           </button>
+        </>;
+        break;
+
+      case "PROMPT_BONUSPICK":
+        setWheelMessage(`${players[currentPlayerIndex].name} has 30 seconds to guess 3 consonants and a vowel!`);
+        fragmentToShow = <>
+          <KeyboardMaker charOptions={"ABCDEFGHIJKLMNOPQRSTUVWXYZ"} guessedLetters={guessed} setLetterToBuy={setLetterToBuy} isVowels={false} hasSpun={hasSpun}/>
         </>;
         break;
 
