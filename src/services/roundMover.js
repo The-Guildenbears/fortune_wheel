@@ -15,7 +15,7 @@ export const roundMover = (code, round, setRound, setPlayers, setMessage) => {
       case "TOTAL_RESET":
         isTotalReset = true;
         message = "New Game: All totals reset."
-        toSetRound = 0;
+        toSetRound = 1;
         break;
       case "ROUND_RESET":
       default:
@@ -28,7 +28,7 @@ export const roundMover = (code, round, setRound, setPlayers, setMessage) => {
       prev.map((p) => ({
         ...p,
         totalBank: isTotalReset ? 0 : (p.totalBank + (isRoundEnded ? p.roundBank : 0)),
-        roundBank: 0,
+        roundBank: 500,
         bankrupt: false,
       }))
     );

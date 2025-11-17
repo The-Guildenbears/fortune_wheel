@@ -1,36 +1,51 @@
 import { updatePlayerByIndex } from "./updatePlayerByIndex";
+import { WHEEL_CONFIG } from "../components/wheel/WheelConfig";
 
-export const handleSpinResult = (players, setPlayers, currentPlayerIndex, lastSpinResult, setMessage, setMoneyToWin) => {
-    // keep track of all values for updating a player
-    let message = "Message goes here";
-    let roundMoney = players[currentPlayerIndex].roundBank;
-    let toBankrupt = false;
-    let toSkip = false;
+export const handleSpinResult = (
+  players,
+  setPlayers,
+  currentPlayerIndex,
+  lastSpinResult,
+  setMessage,
+  setMoneyToWin
+) => {
+  let message = "Message goes here";
+  let roundMoney = players[currentPlayerIndex].roundBank;
+  let toBankrupt = false;
+  let toSkip = false;
 
-    if(typeof lastSpinResult === "number"){
-      // landed on a cash value
-      // in game, you don't actually win the money until you guess correctly
-      setMoneyToWin(lastSpinResult);
-      message = `${players[currentPlayerIndex].name} can win $${lastSpinResult} for each instance of the consonant they guess!`;
-    }else{
-      // landed on either "BANKRUPT" or "LOSE A TURN"
-      if(lastSpinResult === "BANKRUPT"){
-        // remove all round money and flag player as bankrupt
-        roundMoney = 0;
-        toBankrupt = true;
-        message = `${players[currentPlayerIndex].name} landed on BANKRUPT and loses all their money from this round!`;
-      }else{
-        message = `${players[currentPlayerIndex].name} loses a turn!`;
-      }//if-else
-      
-      // skipping player either way
+  if (typeof lastSpinResult === "number") {
+    setMoneyToWin(lastSpinResult);
+    message = `${players[currentPlayerIndex].name} can win $${lastSpinResult} for each instance of the consonant they guess!`;
+  } else {
+    if (lastSpinResult === "BANKRUPT") {
+      roundMoney = 0;
+      toBankrupt = true;
+      message = `${players[currentPlayerIndex].name} landed on BANKRUPT and loses all their money from this round!`;
       toSkip = true;
-    }//if-else
+    } else if (lastSpinResult === "LOSE TURN") {
+      message = `${players[currentPlayerIndex].name} loses a turn!`;
+      toSkip = true;
+    } else if (lastSpinResult === "MYSTERY") {
+      const safeCash = WHEEL_CONFIG.MY_SAFE_CASH;
+      setMoneyToWin(safeCash);
 
-    // update player info as needed
-    updatePlayerByIndex(currentPlayerIndex, setPlayers, (p) => ({ ...p, roundBank: roundMoney, bankrupt: toBankrupt}), false);
-    setMessage(message);
+      message = `${players[currentPlayerIndex].name} landed on the MYSTERY wedge! They can win $${safeCash} for each instance of the consonant they guess, or flip using the Switch button for a chance at the bonus!`;
 
-    // skip player as needed
-    return (toSkip) ? true : false;
-  }//const func
+      toSkip = false;
+    } else {
+      message = `${players[currentPlayerIndex].name} loses a turn!`;
+      toSkip = true;
+    }
+  }
+
+  updatePlayerByIndex(
+    currentPlayerIndex,
+    setPlayers,
+    (p) => ({ ...p, roundBank: roundMoney, bankrupt: toBankrupt }),
+    false
+  );
+
+  setMessage(message);
+  return toSkip ? true : false;
+};

@@ -1,23 +1,15 @@
 import { useEffect } from "react";
-import BoardFakeRow from "./BoardFakeRow";
 
 const Board = ({ puzzleFragment, category, idPrefix = "" }) => {
   // parameters:
   // "puzzleFragment" and "category" are both strings
 
-  // width of rows is 12-14-14-12
-  // for rows 1 and 4, all squares are blank
-  // for rows 2 and 3, the first and last squares are always blank
-
   //make the interactable rows with a loop
   //the keys determine which squares are white or green
 
-  // added a id prefix because there are 2 boards on the screen
-  // need to differentiate the 2 boards from each other
-  const prefix = idPrefix ? `${idPrefix}_` : "";
-
+  //make rows for the cells of the board
   let autoRows = [];
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 4; i++) {
     let row = [];
 
     for (let j = 0; j < 12; j++) {
@@ -26,7 +18,7 @@ const Board = ({ puzzleFragment, category, idPrefix = "" }) => {
         <div
           className="board-box"
           key={index}
-          id={`${prefix}board_square_${index}`}
+          id={`${idPrefix}board_square_${index}`}
         ></div>
       );
     } //for
@@ -36,40 +28,62 @@ const Board = ({ puzzleFragment, category, idPrefix = "" }) => {
 
   useEffect(() => {
     //reset all squares
-    for (let i = 0; i < 24; i++) {
-      const square = document.getElementById(`${prefix}board_square_${i}`);
+    for (let i = 0; i < 48; i++) {
+      const square = document.getElementById(idPrefix + "board_square_" + i);
       if (square) {
         square.style.backgroundColor = "mediumseagreen";
         square.innerHTML = "";
-      }
-    }
-
-    //flag the squares without spaces
-    for (let i = 0; i < puzzleFragment.length; i++) {
-      if (puzzleFragment[i] !== " ") {
-        const square = document.getElementById(`${prefix}board_square_${i}`);
-
-        if (square) {
-          square.style.backgroundColor = "#FFFFFF";
-          square.innerHTML =
-            puzzleFragment[i] === "*" ? " " : puzzleFragment[i];
-        } //if
       } //if
     } //for
-  }, [puzzleFragment]); // Re-run when puzzleFragment changes
+
+    //get individual words from fragment
+    const words = puzzleFragment.split(" ");
+    let position = puzzleFragment.length < 24 ? 12 : 0;
+
+    for (let word of words) {
+      //in case a puzzle has a typo
+      if (word.length === 0) continue;
+
+      //determine the current row and the word's position in it
+      const currentRow = Math.floor(position / 12);
+      const positionInRow = position % 12;
+
+      //if it doesn't fit in the current row, start at the next one
+      if (positionInRow + word.length > 12 && positionInRow > 0) {
+        position = (currentRow + 1) * 12;
+      } //if
+
+      // Place the word
+      for (let i = 0; i < word.length; i++) {
+        //in case of too much row skipping
+        if (position >= 48) break;
+
+        //otherwise fill in square by square
+        const square = document.getElementById(
+          idPrefix + "board_square_" + position
+        );
+        if (square) {
+          square.style.backgroundColor = "#FFFFFF";
+          square.innerHTML = word[i] === "*" ? " " : word[i];
+        } //if
+        position++;
+      } //for
+
+      //add a space
+      position++;
+    } //for
+  }, [puzzleFragment]);
 
   return (
     <>
       <div>
         <div id="board_grid">
-          <BoardFakeRow />
-
           <div className="board-grid-row">
-            <div className="board-box"></div>
+            <div className="board-box-hidden"></div>
 
             {autoRows[0]}
 
-            <div className="board-box"></div>
+            <div className="board-box-hidden"></div>
           </div>
 
           <div className="board-grid-row">
@@ -80,7 +94,21 @@ const Board = ({ puzzleFragment, category, idPrefix = "" }) => {
             <div className="board-box"></div>
           </div>
 
-          <BoardFakeRow />
+          <div className="board-grid-row">
+            <div className="board-box"></div>
+
+            {autoRows[2]}
+
+            <div className="board-box"></div>
+          </div>
+
+          <div className="board-grid-row">
+            <div className="board-box-hidden"></div>
+
+            {autoRows[3]}
+
+            <div className="board-box-hidden"></div>
+          </div>
         </div>
         <div id="board_div_category">{category}</div>
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Board from "../board/Board";
-import Keyboard from "../keyboard/Keyboard";
+import Keyboard from "./Keyboard";
 import Clock from "./Clock";
 
 const PUNCT_OR_DIGIT = [
@@ -26,8 +26,10 @@ const VOWELS = ["A", "E", "I", "O", "U"];
 const GIVEN = ["R", "S", "T", "L", "N", "E"]; // auto-revealed in bonus
 
 export default function BonusMain({
-  puzzleText = "HELLO WORLD",
+  puzzleText,
   category = "BONUS",
+  winnerName = "",
+  onClose,
 }) {
   // Normalize puzzle to uppercase
   const [PUZZLE, setPUZZLE] = useState(
@@ -161,8 +163,25 @@ export default function BonusMain({
         </div>
       ) : (
         <>
+          <button
+            onClick={onClose}
+            style={{
+              position: "relative",
+              top: "-30px",
+              left: "74rem",
+              padding: "0.3rem 0.6rem",
+              background: "#b9b790ff",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            ✕
+          </button>
           <h2 className="play-bold" style={{ marginBottom: "0.5rem" }}>
-            Bonus Round
+            Bonus Round for {winnerName}
           </h2>
           <p className="play-regular" style={{ marginBottom: "1rem" }}>
             Given letters: <strong>R, S, T, L, N, E</strong>. Pick exactly{" "}
