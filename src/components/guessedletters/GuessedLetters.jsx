@@ -15,8 +15,8 @@ const GuessedLetters = ({ guessed, preguessed }) => {
   return (
     <>
       <div>
-        <h3>Guessed Letters</h3>
-        <p id="guessedLetters_listarea">{guessedString}</p>
+        <h3 style={{margin: "0", marginBottom: "0.25em"}}>Guessed Letters</h3>
+        <div id="guessedLetters_listarea">{guessedString}</div>
       </div>
     </>
   );

@@ -1,6 +1,6 @@
 import { WHEEL_CONFIG } from "./WheelConfig";
 
-export default function CreateWheel(round) {
+export function CreateWheel(round) {
   const { SPACES, CASH_VALUES, HEXS } = WHEEL_CONFIG;
 
   const wheelAr = [];
@@ -18,6 +18,24 @@ export default function CreateWheel(round) {
     wheelAr[ind] = special[i];
   }
   return wheelAr;
+}
+export function MysteryWedge(array, round) {
+  if (round > 1) {
+    const { MY_VAL, MY_HEX } = WHEEL_CONFIG;
+    const numericIndices = [];
+    for (let i = 0; i < array.length; i++) {
+      if (typeof array[i]?.val === "number") {
+        numericIndices.push(i);
+      }
+    }
+    const picked =
+      numericIndices[Math.floor(Math.random() * numericIndices.length)];
+    return array.map((item, idx) =>
+      idx === picked ? { val: MY_VAL, col: MY_HEX } : { ...item }
+    );
+  } else {
+    return array;
+  }
 }
 
 function _getSpecFields(round) {
@@ -38,6 +56,7 @@ function _getSpecFields(round) {
       col: LT_HEX,
     });
   }
+  // add top_cash fields
   let top_cash = 0;
   switch (round) {
     case 1:
@@ -57,7 +76,6 @@ function _getSpecFields(round) {
     val: top_cash,
     col: TOP_HEX,
   });
-
   return ar;
 }
 
@@ -68,7 +86,7 @@ function _getRandomIndexes(count, maxIndex) {
     const rand = Math.floor(Math.random() * maxIndex);
 
     // check if indexes are at least 2 spots apart
-    const tooClose = results.some((idx) => Math.abs(idx - rand) < 2);
+    const tooClose = results.some((idx) => Math.abs(idx - rand) < 3);
 
     if (!tooClose) {
       results.push(rand);
