@@ -49,6 +49,14 @@ export default function BonusMain({
   // Board fragment
   const [puzzleFragment, setPuzzleFragment] = useState("");
 
+  // Guess phase + input + solved flag
+  const [hasRevealed, setHasRevealed] = useState(false);
+  const [showGuessUI, setShowGuessUI] = useState(false);
+  const [guessInput, setGuessInput] = useState("");
+  const [bonusSolved, setBonusSolved] = useState(false);
+  // Starting the timer
+  const [startCountdown, setCountdown] = useState(false);
+
   useEffect(() => {
     let res = "";
     for (const ch of PUZZLE) {
@@ -63,10 +71,6 @@ export default function BonusMain({
     setPuzzleFragment(res);
     setLoading(false);
   }, [PUZZLE, guessed]);
-
-  // useEffect(() => {
-  //   alert(`Puzzle frag: ${puzzleFragment}`);
-  // }, [puzzleFragment]);
 
   // Handle selections coming from Keyboard
   useEffect(() => {
@@ -93,14 +97,21 @@ export default function BonusMain({
     setLetterToBuy("");
   }, [letterToBuy, guessed, pickedConsonants, pickedVowel, preguessed]);
 
-  const canReveal = pickedConsonants.length === 3 && pickedVowel !== "";
+  const canReveal =
+    pickedConsonants.length === 3 && pickedVowel !== "" && !hasRevealed;
 
   const onReveal = () => {
     if (!canReveal) return;
     setGuessed((g) => [...g, ...pickedConsonants, pickedVowel]);
+    setHasRevealed(true);
+    setCountdown(true);
+
+    // Once picks are revealed, hide keyboard and show guess input
+    setShowGuessUI(true);
   };
 
   const onClear = () => {
+    if (hasRevealed) return; // optional: disable clearing after reveal
     setPickedConsonants([]);
     setPickedVowel("");
   };
@@ -109,6 +120,28 @@ export default function BonusMain({
     setPickedConsonants([]);
     setPickedVowel("");
     setGuessed(preguessed);
+    setHasRevealed(false);
+    setShowGuessUI(false);
+    setGuessInput("");
+    setBonusSolved(false);
+  };
+
+  const handleGuessChange = (e) => {
+    // Force uppercase as user types
+    setGuessInput(e.target.value.toUpperCase());
+  };
+
+  const handleGuessSubmit = (e) => {
+    e.preventDefault();
+    const normalizedGuess = guessInput.trim().toUpperCase();
+    if (!normalizedGuess) return;
+
+    if (normalizedGuess === PUZZLE) {
+      setBonusSolved(true);
+      setCountdown(false);
+    } else {
+      setGuessInput("");
+    }
   };
 
   return (
@@ -143,7 +176,11 @@ export default function BonusMain({
               category={category}
               idPrefix="bonus"
             />
-            <Clock />
+            <Clock
+              bonusSolved={bonusSolved}
+              startCountdown={startCountdown}
+              setCountdown={setCountdown}
+            />
           </div>
 
           <div
@@ -164,26 +201,62 @@ export default function BonusMain({
             </div>
             <button
               onClick={onClear}
-              disabled={!pickedConsonants.length && !pickedVowel}
+              disabled={
+                (!pickedConsonants.length && !pickedVowel) || hasRevealed
+              }
             >
               Clear Picks
             </button>
             <button onClick={onStartOver}>Start Over</button>
           </div>
 
-          <Keyboard
-            guessedLetters={guessed}
-            setLetterToBuy={setLetterToBuy}
-            hasSpun={hasSpun}
-          />
+          {/* Keyboard is only shown before reveal */}
+          {!showGuessUI && (
+            <Keyboard
+              guessedLetters={guessed}
+              setLetterToBuy={setLetterToBuy}
+              hasSpun={hasSpun}
+            />
+          )}
 
+          {/* Guess UI appears after Reveal Picks */}
+          {showGuessUI && (
+            <form
+              onSubmit={handleGuessSubmit}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                marginTop: "0.75rem",
+                marginBottom: "0.5rem",
+              }}
+            >
+              <input
+                type="text"
+                value={guessInput}
+                onChange={handleGuessChange}
+                className="play-bold"
+                style={{
+                  padding: "0.4rem 0.6rem",
+                  fontSize: "1rem",
+                  textTransform: "uppercase",
+                }}
+                placeholder="TYPE YOUR GUESS"
+                autoFocus
+              />
+              <button type="submit">GUESS</button>
+              {bonusSolved}
+            </form>
+          )}
+
+          {/* Reveal button + status text */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <button onClick={onReveal} disabled={!canReveal}>
               Reveal Picks
             </button>
             {!canReveal ? (
               <span style={{ fontSize: 14, color: "#666" }}>
-                Need {3 - pickedConsonants.length} consonant(s) and{" "}
+                Need {Math.max(0, 3 - pickedConsonants.length)} consonant(s) and{" "}
                 {pickedVowel ? 0 : 1} vowel.
               </span>
             ) : (
